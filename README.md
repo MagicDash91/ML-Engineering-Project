@@ -10,7 +10,7 @@ Welcome to my GitHub portfolio! I'm a Machine Learning and Artificial Intelligen
 **Tech Stack**: FastAPI, LangChain, SQL, PostgreSQL/MySQL/BigQuery, Docker
 
 A FastAPI-based web app that lets users query databases using natural language.
-- Converts user input into SQL queries via **LangChain**
+- Converts user input into SQL queries via **LangChain SQL Agent and Google Gemini**
 - Supports dynamic database backends (PostgreSQL, MySQL, BigQuery)
 - Real-time query execution and result rendering
 - Easily deployable using Docker
@@ -21,7 +21,7 @@ A FastAPI-based web app that lets users query databases using natural language.
 **Tech Stack**: FastAPI, DynamoDB, Scikit-learn, LangChain, Docker, GCP
 
 A churn analysis web app that connects to a **DynamoDB** table, enabling:
-- Natural language-based churn summary and question-answering using **LangChain**
+- Natural language-based churn summary and question-answering using **LangChain and Google Gemini**
 - Churn prediction and feature importance via **Scikit-learn**
 - Built with **FastAPI** for a smooth, API-ready interface
 - Designed for deployment on **Google Cloud Run** or Docker
