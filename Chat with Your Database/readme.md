@@ -22,6 +22,15 @@ This is a web application built using FastAPI that allows users to interact with
 - Uvicorn (for running the server)
 - Database drivers (e.g., psycopg2 for PostgreSQL, mysql-connector-python for MySQL)
 
+## Project Preview 
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Chat%20with%20Your%20Database/static/chat1.jpg)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Chat%20with%20Your%20Database/static/chat2.jpg)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Chat%20with%20Your%20Database/static/chat3.jpg)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Chat%20with%20Your%20Database/static/chat4.jpg)
+
 ## Installation
 
 1. **Clone the Repository**
