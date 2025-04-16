@@ -277,7 +277,7 @@ async def ask_db(
         llm = ChatGoogleGenerativeAI(
             model="gemini-2.0-flash",
             temperature=0,
-            google_api_key="AIzaSyAMAYxkjP49QZRCg21zImWWAu7c3YHJ0a8"
+            google_api_key="**************************"
         )
 
         prompt = hub.pull("langchain-ai/react-agent-template").partial(instructions=instructions)
