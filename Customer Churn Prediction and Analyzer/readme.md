@@ -83,7 +83,9 @@ Google Generative AI
 Contact
 For any questions or support, please contact MagicDash91.
 
-Application Screenshot
+### Application Screenshot
+
+
 
 
 
