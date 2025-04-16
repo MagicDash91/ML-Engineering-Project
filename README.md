@@ -57,7 +57,7 @@ A churn analysis web app that connects to a **DynamoDB** table, enabling:
 
 ## 📬 Let’s Connect!
 
-- 💼 [LinkedIn]([https://www.linkedin.com/in/YOUR-USERNAME](https://www.linkedin.com/in/michael-wiryaseputra/))
+- 💼 [LinkedIn](https://www.linkedin.com/in/michael-wiryaseputra/)
 - ✉️ Email: michwirja@gmail.com
 If you find these projects interesting, feel free to ⭐ star the repo or reach out for collaboration opportunities!
 
