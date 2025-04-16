@@ -1,6 +1,6 @@
 # Automatic Churn Data Analysis Prediction
 
-![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Customer%20Churn%20Prediction%20and%20Analyzer/static/churn (2).png)
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Customer%20Churn%20Prediction%20and%20Analyzer/static/churn11.png)
 
 ## Overview
 
