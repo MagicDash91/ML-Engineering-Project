@@ -85,9 +85,19 @@ For any questions or support, please contact MagicDash91.
 
 ### Application Screenshot
 
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Customer%20Churn%20Prediction%20and%20Analyzer/static/aws1.jpg)
 
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Customer%20Churn%20Prediction%20and%20Analyzer/static/aws2.jpg)
 
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Customer%20Churn%20Prediction%20and%20Analyzer/static/aws3.jpg)
 
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Customer%20Churn%20Prediction%20and%20Analyzer/static/aws4.jpg)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Customer%20Churn%20Prediction%20and%20Analyzer/static/aws5.jpg)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Customer%20Churn%20Prediction%20and%20Analyzer/static/aws6.jpg)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Customer%20Churn%20Prediction%20and%20Analyzer/static/aws7.jpg)
 
 ### Explanation
 
