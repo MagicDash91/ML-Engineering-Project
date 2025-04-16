@@ -1,6 +1,6 @@
 # Chat With Your Database
 
-[![Application Logo](https://github.com/MagicDash91/ML-Engineering-Project/raw/main/static/chat.png)](https://github.com/MagicDash91/ML-Engineering-Project/blob/main/Chat%20with%20Your%20Database/static/chat.png)
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Chat%20with%20Your%20Database/static/chat.png)
 
 ## Overview
 
