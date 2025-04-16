@@ -1,4 +1,4 @@
-# 🧠 Michael's Machine Learning Engineering Portfolio
+# 🧠 All of my Machine Learning Engineering Portfolio
 
 Welcome to my GitHub portfolio! I'm a Machine Learning and Artificial Intelligence Engineer with experience building full-stack ML systems — from database integration and data pipelines to large language model applications and cloud deployment. This repo is a collection of my projects combining **ML, NLP, LLMs, and data engineering** to deliver intelligent, scalable solutions.
 
