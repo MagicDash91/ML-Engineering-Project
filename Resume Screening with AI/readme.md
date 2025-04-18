@@ -16,6 +16,10 @@ This project uses **FastAPI** and **Google Gemini** to build an AI-powered **Res
 - **Bootstrap 5**: For responsive and sleek UI design.
 - **Python 3.x**: The primary programming language.
 
+## Project Screenshots :
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Resume%20Screening%20with%20AI/static/h1.jpg)
+
 ## 🧑‍💻 Setup Instructions
 
 1. **Clone the Repository**
