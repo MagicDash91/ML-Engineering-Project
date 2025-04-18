@@ -31,23 +31,22 @@ Install Dependencies
    python -m venv env
    source env/bin/activate  # For Linux/Mac
    env\Scripts\activate     # For Windows
+Create Virtual Environment
 
+3. **Install required dependencies:**
+   ```bash
+   pip install -r requirements.txt
+Install Libraries
 
-### 3. Install required dependencies:
-
-pip install -r requirements.txt
-
-### 4. Set up your Google API key:
+4. **Set up your Google API key:**
 Make sure to have a valid API key for Google Gemini. If you don’t have it, you can get it from Google Cloud Console.
-
 In your project, replace api_key with your actual API key in the analyze_resumes function.
 
-### 5. Run the application:
-
+5. **Run the application:**
 uvicorn main:app --reload
 The app will be running at http://127.0.0.1:9000.
 
-### 6. Test the application:
+6. **Test the application:**
 Visit the link above and upload a job description along with resumes (PDF or DOCX format).
 
 The AI will analyze and provide match scores and feedback on each resume.
