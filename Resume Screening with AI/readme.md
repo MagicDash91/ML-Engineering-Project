@@ -18,7 +18,7 @@ This project uses **FastAPI** and **Google Gemini** to build an AI-powered **Res
 
 ## Project Screenshots :
 
-![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Resume%20Screening%20with%20AI/static/h1.jpg)
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Resume%20Screening%20with%20AI/static/h1.JPG)
 
 ## 🧑‍💻 Setup Instructions
 
