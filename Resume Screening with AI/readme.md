@@ -18,10 +18,18 @@ This project uses **FastAPI** and **Google Gemini** to build an AI-powered **Res
 
 ## 🧑‍💻 Setup Instructions
 
+1. **Clone the Repository**
+
+   ```bash
+   git clone https://github.com/MagicDash91/ML-Engineering-Project.git
+   cd ML-Engineering-Project
+Install Dependencies
+
 ### 1. Clone the repository:
   ```bash
   git clone https://github.com/your-username/resume-matcher.git
   cd resume-matcher
+Install Dependencies
 
 ### 2. Create a virtual environment:
 
