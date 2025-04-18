@@ -19,9 +19,9 @@ This project uses **FastAPI** and **Google Gemini** to build an AI-powered **Res
 ## 🧑‍💻 Setup Instructions
 
 ### 1. Clone the repository:
-```bash
-git clone https://github.com/your-username/resume-matcher.git
-cd resume-matcher ```
+  ```bash
+  git clone https://github.com/your-username/resume-matcher.git
+  cd resume-matcher
 
 ### 2. Create a virtual environment:
 
