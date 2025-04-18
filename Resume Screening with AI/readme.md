@@ -22,20 +22,17 @@ This project uses **FastAPI** and **Google Gemini** to build an AI-powered **Res
 
    ```bash
    git clone https://github.com/MagicDash91/ML-Engineering-Project.git
-   cd ML-Engineering-Project
+   cd resume-matcher
 Install Dependencies
 
-### 1. Clone the repository:
-  ```bash
-  git clone https://github.com/your-username/resume-matcher.git
-  cd resume-matcher
-Install Dependencies
+2. **Create a virtual environment:**
 
-### 2. Create a virtual environment:
+   ```bash
+   python -m venv env
+   source env/bin/activate  # For Linux/Mac
+   env\Scripts\activate     # For Windows
 
-python -m venv env
-source env/bin/activate  # For Linux/Mac
-env\Scripts\activate     # For Windows
+
 ### 3. Install required dependencies:
 
 pip install -r requirements.txt
