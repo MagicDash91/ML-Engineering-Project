@@ -28,6 +28,17 @@ A churn analysis web app that connects to a **DynamoDB** table, enabling:
 
 ---
 
+### 🔁 Resume Matcher with Google Gemini and FastAPI
+
+A Resume Matcher with Google Gemini and FastAPI, enabling:
+- Upload **PDF** or **DOCX** resumes and a **Job Description**.
+- **Google Gemini** analyzes the resumes and compares them with the job description.
+- Results are displayed with a **match score** and a breakdown of relevant skills, experience, and education.
+- Uses **Markdown** for structured, clean output, which is then rendered as HTML.
+- User-friendly **FastAPI** backend with **Bootstrap** frontend.
+
+---
+
 ## 🛠️ Skill Set
 
 ### 🗃️ Databases
