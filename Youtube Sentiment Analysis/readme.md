@@ -88,13 +88,13 @@ The YouTube Sentiment Analysis project is a web application built using FastAPI 
 ## Directory Structure
 your_project/
 │
-├── app.py
+├── main.py
 ├── requirements.txt
 └── static/
 
 
 
-- `app.py`: The main FastAPI application file.
+- `main.py`: The main FastAPI application file.
 - `requirements.txt`: List of dependencies required for the project.
 - `static/`: Directory to store generated images and PDF reports.
 
@@ -158,62 +158,7 @@ transformers
 huggingface_hub
 google-generativeai
 markdown
-Directory Structure
-Ensure your directory structure looks like this:
 
 
-your_project/
-│
-├── app.py
-├── requirements.txt
-└── static/
-Example requirements.txt
 
-fastapi==0.95.2
-uvicorn==0.20.0
-youtube-comment-downloader==2023.04.15
-pandas==1.5.3
-polars==0.17.12
-seaborn==0.12.2
-matplotlib==3.7.1
-wordcloud==1.9.0.1
-pillow==9.4.0
-fpdf==1.7.2
-transformers==4.29.2
-huggingface_hub==0.13.3
-google-generativeai==0.0.4
-markdown==3.4.1
-License File
-Create a LICENSE file with the MIT License text:
 
-LICENSE
-
-MIT License
-
-Copyright (c) 2023 Your Name
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-Final Directory Structure
-
-your_project/
-│
-├── main.py
-├── requirements.txt
-├── README.md
-└── static/
