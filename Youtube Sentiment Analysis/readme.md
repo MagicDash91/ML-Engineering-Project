@@ -12,6 +12,18 @@ The YouTube Sentiment Analysis project is a web application built using FastAPI 
 - **Insights Generation**: Uses the Google Gemini API to generate actionable insights based on the sentiment analysis.
 - **PDF Report**: Provides a downloadable PDF report containing the sentiment distribution, word clouds, and insights.
 
+## Project Screenshots :
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Youtube%20Sentiment%20Analysis/static/y1.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Youtube%20Sentiment%20Analysis/static/y2.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Youtube%20Sentiment%20Analysis/static/y3.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Youtube%20Sentiment%20Analysis/static/y4.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Youtube%20Sentiment%20Analysis/static/y5.JPG)
+
 ## Requirements
 
 - Python 3.8 or higher
