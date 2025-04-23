@@ -47,7 +47,7 @@ def load_documents(file_paths):
 
 # Define a function for document analysis
 def analyze_documents_func(docs, prompt):
-    api_key = "AIzaSyAMAYxkjP49QZRCg21zImWWAu7c3YHJ0a8"
+    api_key = "*********************************"
     genai.configure(api_key=api_key)
     llm = ChatGoogleGenerativeAI(model=gemini_model, google_api_key=api_key)
 
