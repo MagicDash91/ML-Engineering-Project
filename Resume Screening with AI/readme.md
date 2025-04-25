@@ -2,6 +2,55 @@
 
 This project uses **FastAPI** and **Google Gemini** to build an AI-powered **Resume Matcher** web application. It helps automate the resume screening process by analyzing uploaded resumes and comparing them with a given job description. The results are returned with a match score and detailed analysis in a **clean, readable format**.
 
+## 💡 Why LangGraph?
+
+LangGraph allows you to define workflows as graphs where nodes represent AI or data processing steps. In this app, LangGraph is used to:
+
+- Orchestrate the document analysis pipeline
+- Handle multi-step LLM interactions
+- Ensure stateful transitions across resume uploads, LLM calls, and score rendering
+
+This makes it easy to **modularize**, **extend**, and **visualize** AI workflows.
+
+---
+
+## 🧠 Why LangSmith?
+
+LangSmith provides observability for LLM applications by tracking:
+
+- **Token usage**: See how many tokens your app is using and where.
+- **Latency**: Measure performance and response times at each step.
+- **Debugging tools**: Inspect prompts, responses, and intermediate state across chains.
+- **Version tracking**: Monitor how your app behaves as you update prompts or logic.
+
+In this app, LangSmith is used to:
+
+- Trace the **document analysis pipeline** across LangGraph nodes  
+- Log each **LLM invocation** and its input/output  
+- Provide visibility into prompt engineering and cost efficiency
+
+This makes it easier to **debug**, **optimize**, and **scale** AI-powered apps confidently.
+
+
+## 🧩 Workflow Overview
+
+```text
+[Start]
+  |
+  v
+[Load Resumes] ---> [Job Description Input]
+  |                        |
+  v                        v
+[Gemini Evaluation Node] --→ [Score + Feedback Node]
+                               |
+                               v
+                           [Render HTML]
+```
+
+Built entirely with **LangGraph**!
+
+---
+
 ## 🚀 Features
 - Upload **PDF** or **DOCX** resumes and a **Job Description**.
 - **Google Gemini** analyzes the resumes and compares them with the job description.
