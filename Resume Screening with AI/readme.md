@@ -31,6 +31,7 @@ In this app, LangSmith is used to:
 
 This makes it easier to **debug**, **optimize**, and **scale** AI-powered apps confidently.
 
+---
 
 ## 🧩 Workflow Overview
 
@@ -65,6 +66,8 @@ Built entirely with **LangGraph**!
 - **Bootstrap 5**: For responsive and sleek UI design.
 - **Python 3.x**: The primary programming language.
 
+---
+
 ## Project Screenshots :
 
 ![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Resume%20Screening%20with%20AI/static/h1.JPG)
@@ -76,6 +79,8 @@ Built entirely with **LangGraph**!
 ![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Resume%20Screening%20with%20AI/static/h4.JPG)
 
 ![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Resume%20Screening%20with%20AI/static/h5.JPG)
+
+---
 
 ## 🧑‍💻 Setup Instructions
 
