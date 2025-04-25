@@ -51,7 +51,7 @@ A Resume Matcher with Google Gemini and FastAPI, enabling:
 - NLTK, HuggingFace Transformers, Wordcloud, N-grams, Sentiment Analysis, Topic Modeling
 
 ### 🧠 LLM & RAG Apps
-- LangChain, LlamaIndex, OpenAI, Google Gemini
+- LangChain, LlamaIndex, OpenAI, Google Gemini, Langgraph, Langsmith
 - Vector DBs: FAISS, ChromaDB
 
 ### ☁️ Cloud & Deployment
