@@ -12,7 +12,7 @@ LangGraph allows you to define workflows as graphs where nodes represent AI or d
 
 This makes it easy to **modularize**, **extend**, and **visualize** AI workflows.
 
----
+
 
 ## 🧠 Why LangSmith?
 
@@ -31,7 +31,7 @@ In this app, LangSmith is used to:
 
 This makes it easier to **debug**, **optimize**, and **scale** AI-powered apps confidently.
 
----
+
 
 ## 🧩 Workflow Overview
 
@@ -50,7 +50,7 @@ This makes it easier to **debug**, **optimize**, and **scale** AI-powered apps c
 
 Built entirely with **LangGraph**!
 
----
+
 
 ## 🚀 Features
 - Upload **PDF** or **DOCX** resumes and a **Job Description**.
@@ -66,7 +66,7 @@ Built entirely with **LangGraph**!
 - **Bootstrap 5**: For responsive and sleek UI design.
 - **Python 3.x**: The primary programming language.
 
----
+
 
 ## Project Screenshots :
 
@@ -80,7 +80,7 @@ Built entirely with **LangGraph**!
 
 ![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Resume%20Screening%20with%20AI/static/h5.JPG)
 
----
+
 
 ## 🧑‍💻 Setup Instructions
 
