@@ -80,7 +80,9 @@ Built entirely with **LangGraph**!
 
 ![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Resume%20Screening%20with%20AI/static/h5.JPG)
 
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Resume%20Screening%20with%20AI/static/h6.JPG)
 
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Resume%20Screening%20with%20AI/static/h7.JPG)
 
 ## 🧑‍💻 Setup Instructions
 
