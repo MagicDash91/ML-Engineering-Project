@@ -1,4 +1,4 @@
-# Resume Matcher with Google Gemini and FastAPI
+# Resume Matcher with Google Gemini, Langchain, Langgraph, Langsmith and FastAPI
 
 This project uses **FastAPI** and **Google Gemini** to build an AI-powered **Resume Matcher** web application. It helps automate the resume screening process by analyzing uploaded resumes and comparing them with a given job description. The results are returned with a match score and detailed analysis in a **clean, readable format**.
 
