@@ -43,26 +43,13 @@ All services are containerized and managed via **Docker Compose**.
 
 ```
 rag-challenge/
-├── upload-service/
-│   ├── upload_service.py
-│   ├── requirements.txt
-│   └── Dockerfile
-├── analyze-service/
-│   ├── analyze_service.py
-│   ├── requirements.txt
-│   └── Dockerfile
-├── ask-service/
-│   ├── ask_service.py
-│   ├── requirements.txt
-│   └── Dockerfile
-├── orchestrator-service/
-│   ├── orchestrator_service.py
-│   ├── requirements.txt
-│   └── Dockerfile
-├── shared/
-│   └── (optional shared utilities)
-├── docker-compose.yml
-└── README.md
+├── venv/
+├── pdf_report/
+│   ├── 0a61a353b1ea9fd9b8f63b60239634ca3007d58f.pdf
+│   ├── 0c0faea14d108e1617f2d6d2a7c1aae04eb88fe0.pdf
+│   └── and other PDF files
+├── static/
+├── main.py
 ```
 
 ## 🔧 Tech Stack
@@ -96,10 +83,10 @@ cd rag-challenge
 3. Start all services:
 
 ```bash
-docker-compose up --build
+python main.py
 ```
 
-4. Access the orchestrator endpoints via `http://localhost:8000`.
+4. Access the orchestrator endpoints via `http://localhost:9000`.
 
 ## 📬 Contact
 
