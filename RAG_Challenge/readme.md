@@ -88,13 +88,6 @@ python main.py
 
 4. Access the orchestrator endpoints via `http://localhost:9000`.
 
-## 📬 Contact
-
-Made with ❤️ by \[Michael Wiryaseputra]
-
-* LinkedIn: [Your LinkedIn]([https://www.linkedin.com/in/yourprofile/](https://www.linkedin.com/in/michael-wiryaseputra/))
-
-
 ---
 
 ⭐ If you like this project, give it a star!
