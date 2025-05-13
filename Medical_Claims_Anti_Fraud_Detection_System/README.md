@@ -68,14 +68,11 @@ This project focuses on **detecting fraudulent activities in medical claims** by
 
 ## Project Screenshots :
 
-![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Medical_Claims_Anti_Fraud_Detection_System
-/static/m2.JPG)
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Medical_Claims_Anti_Fraud_Detection_System/static/m2.JPG)
 
-![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Medical_Claims_Anti_Fraud_Detection_System
-/static/m3.JPG)
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Medical_Claims_Anti_Fraud_Detection_System/static/m3.JPG)
 
-![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Medical_Claims_Anti_Fraud_Detection_System
-/static/m4.JPG)
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Medical_Claims_Anti_Fraud_Detection_System/static/m4.JPG)
 
 ## 📁 Folder Structure
 
