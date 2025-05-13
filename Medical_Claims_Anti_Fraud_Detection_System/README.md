@@ -71,8 +71,7 @@ This project focuses on **detecting fraudulent activities in medical claims** by
 ```
 ├── main.py                # LLM + RAG pipeline
 ├── main2.py               # OCR and CV pipeline
-├── templates/             # HTML templates for FastAPI interface
-├── dummy_receipts/        # Generated dummy PNG receipts
+├── static/ 
 ├── .env                   # Environment variables (e.g., Gemini API key)
 ├── requirements.txt
 └── README.md
@@ -107,7 +106,7 @@ uvicorn main:app --reload --port 9000
 For OCR pipeline:
 
 ```bash
-uvicorn main2:app --reload --port 9001
+uvicorn main2:app --reload --port 9000
 ```
 
 ---
