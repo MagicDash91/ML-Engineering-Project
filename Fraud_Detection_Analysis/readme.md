@@ -48,6 +48,16 @@ Additionally, the project integrates advanced **LangChain** components with **Go
 
 ---
 
+## Project Screenshots :
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Fraud_Detection_Analysis/static/r1.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Fraud_Detection_Analysis/static/r2.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Fraud_Detection_Analysis/static/r3.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Fraud_Detection_Analysis/static/r4.JPG)
+
 ## Setup & Installation
 
 1. **Clone the repository**
