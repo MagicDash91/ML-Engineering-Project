@@ -19,13 +19,13 @@ This project is a web-based **Emotion Analyzer** built with **FastAPI**, allowin
 
 ## Project Screenshots :
 
-![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Fraud_Detection_Analysis/static/r1.JPG)
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Emotion_Classification/static/T1.JPG)
 
-![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Fraud_Detection_Analysis/static/r2.JPG)
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Emotion_Classification/static/T2.JPG)
 
-![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Fraud_Detection_Analysis/static/r3.JPG)
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Emotion_Classification/static/T3.JPG)
 
-![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Fraud_Detection_Analysis/static/r4.JPG)
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Emotion_Classification/static/T4.JPG)
 
 
 ## 🛠️ Tech Stack & Tools
