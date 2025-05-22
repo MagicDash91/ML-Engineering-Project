@@ -26,6 +26,16 @@ Example row:
 | USA      | Tomato | My plant is died yesterday     |
 | Brazil   | Corn   | Why my tomato isn't growing    |
 
+## Project Screenshots :
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/crop_analysis/static/c1.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/crop_analysis/static/c2.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/crop_analysis/static/c3.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/crop_analysis/static/c4.JPG)
+
 ## How to Run
 
 1. Clone the repository:
