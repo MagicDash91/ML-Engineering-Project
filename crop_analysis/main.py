@@ -24,7 +24,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 api_key = os.getenv("GOOGLE_API_KEY")
 if not api_key:
-    api_key = "AIzaSyAMAYxkjP49QZRCg21zImWWAu7c3YHJ0a8"  # Fallback key (consider removing in production)
+    api_key = "***************************"  # Fallback key (consider removing in production)
 genai.configure(api_key=api_key)
 
 # Configure LangSmith
