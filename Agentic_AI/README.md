@@ -15,6 +15,37 @@ This project is a FastAPI web application that leverages advanced AI technologie
 - Supports detailed and structured responses, focusing on legal analysis, comparisons, summaries, and numeric data interpretation.
 - Designed specifically to understand and analyze Indonesian laws and regulations.
 
+## Libraries and Dependencies Used
+
+- FastAPI (including UploadFile, File, Form, Request, HTMLResponse, JSONResponse, StaticFiles)
+- Python typing (List, Dict, Any, TypedDict, Optional)
+- LangChain Community Document Loaders (UnstructuredFileLoader)
+- LangChain Google Generative AI (ChatGoogleGenerativeAI)
+- LangChain Agents (Tool)
+- LangChain Utilities (WikipediaAPIWrapper, ArxivAPIWrapper)
+- LangChain Tools (WikipediaQueryRun, ArxivQueryRun)
+- LangChain Community Tools (TavilySearchResults)
+- LangChain Chains (LLMChain)
+- LangChain Prompts (PromptTemplate)
+- LangGraph (StateGraph, END)
+- python-dotenv (load_dotenv)
+- Standard Python libraries (os, shutil, uuid, json, re, datetime)
+- Google Generative AI SDK (google.generativeai)
+- Markdown processing (markdown)
+- HTML escaping (escape)
+- LangChain Core Messages (AIMessage)
+
+## Project Screenshots :
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Agentic_AI/static/a1.jpg)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Agentic_AI/static/a2.jpg)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Agentic_AI/static/a3.jpg)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Agentic_AI/static/a4.jpg)
+
+
 ## Installation
 
 1. Clone the repository:
@@ -74,18 +105,6 @@ The language model uses a detailed prompt template tailored to Indonesian legal 
 - Numeric data comparison and aggregation where relevant.
 - Clear explanations with citations from the provided documents.
 
-## Technologies Used
-
-- FastAPI
-- LangChain & LangGraph
-- Google Gemini (Google Generative AI)
-- WikipediaAPI, arXiv API, Tavily API
-- Bootstrap for frontend styling
-- Python 3.9+
-
-## Contributing
-
-Contributions, issues, and feature requests are welcome! Feel free to check [issues page](https://github.com/yourusername/indonesian-legal-doc-analysis/issues).
 
 ## License
 
@@ -93,4 +112,4 @@ This project is licensed under the MIT License.
 
 ---
 
-*Created by Your Name - 2025*
+*Created by Michael Wiryaseputra - 2025*
