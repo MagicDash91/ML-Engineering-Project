@@ -29,6 +29,18 @@ This project provides a **web-based interactive platform** for forecasting sales
 
 ---
 
+## Project Screenshots :
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/forecasting/static/f1.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/forecasting/static/f2.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/forecasting/static/f3.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/forecasting/static/f4.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/forecasting/static/f5.JPG)
+
 ## 📂 File Structure
 
 ```
