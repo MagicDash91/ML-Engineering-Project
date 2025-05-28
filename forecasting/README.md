@@ -59,7 +59,7 @@ This project provides a **web-based interactive platform** for forecasting sales
 ### 1. Clone this repository
 
 ```bash
-git clone https://github.com/your-username/sales-demand-forecasting.git
+git clone https://github.com/MagicDash91/sales-demand-forecasting.git
 cd sales-demand-forecasting
 ```
 
