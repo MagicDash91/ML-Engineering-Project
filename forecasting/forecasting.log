@@ -1,0 +1,104 @@
+2025-05-28 15:16:15,778 - INFO - [main.py:676] - Trying to read CSV file with common delimiters...
+2025-05-28 15:16:15,794 - INFO - [main.py:689] - Successfully read CSV with delimiter: ','
+2025-05-28 15:16:15,794 - INFO - [main.py:638] - Starting data cleaning process
+2025-05-28 15:16:15,799 - INFO - [main.py:655] - Dropping ID/number/phone columns: ['Holiday_Flag']
+2025-05-28 15:16:15,800 - INFO - [main.py:659] - Preserving datetime columns for time series analysis
+2025-05-28 15:16:15,801 - INFO - [main.py:661] - Data cleaning complete. Final dataframe shape: (6435, 7)
+2025-05-28 15:16:19,984 - INFO - [main.py:920] - Starting analysis with date_column=Date, target_column=Weekly_Sales
+2025-05-28 15:16:19,985 - INFO - [main.py:638] - Starting data cleaning process
+2025-05-28 15:16:19,988 - INFO - [main.py:659] - Preserving datetime columns for time series analysis
+2025-05-28 15:16:19,989 - INFO - [main.py:661] - Data cleaning complete. Final dataframe shape: (6435, 7)
+2025-05-28 15:16:19,989 - INFO - [main.py:924] - Data cleaned. Shape: (6435, 7)
+2025-05-28 15:16:20,001 - INFO - [main.py:928] - Time series prepared. Length: 2565
+2025-05-28 15:16:20,001 - INFO - [main.py:935] - Finding best SARIMA parameters...
+2025-05-28 15:17:19,680 - INFO - [main.py:938] - Best parameters found: order=(2, 1, 2), seasonal_order=(1, 0, 1, 12)
+2025-05-28 15:17:19,680 - INFO - [main.py:946] - Fitting new model
+2025-05-28 15:17:23,972 - INFO - [main.py:951] - Generating fitted values
+2025-05-28 15:17:23,973 - INFO - [main.py:955] - Calculating metrics
+2025-05-28 15:17:23,980 - INFO - [main.py:959] - Metrics calculated - MAE: 473001.06, RMSE: 559839.61, MAPE: nan%
+2025-05-28 15:17:23,981 - INFO - [main.py:962] - Generating forecast
+2025-05-28 15:17:23,985 - INFO - [main.py:982] - Creating visualization plots
+2025-05-28 15:17:24,138 - INFO - [main.py:759] - Saved plot to forecasting\static\plots\acf_20250528_151724.png
+2025-05-28 15:17:24,357 - INFO - [main.py:759] - Saved plot to forecasting\static\plots\pacf_20250528_151724.png
+2025-05-28 15:17:24,436 - INFO - [main.py:1000] - Performing seasonal decomposition
+2025-05-28 15:17:25,071 - INFO - [main.py:759] - Saved plot to forecasting\static\plots\decomposition_20250528_151724.png
+2025-05-28 15:17:25,536 - INFO - [main.py:1062] - Analysis completed successfully
+2025-05-28 15:19:13,791 - INFO - [main.py:688] - Trying to read CSV file with common delimiters...
+2025-05-28 15:19:13,803 - INFO - [main.py:701] - Successfully read CSV with delimiter: ','
+2025-05-28 15:19:13,803 - INFO - [main.py:650] - Starting data cleaning process
+2025-05-28 15:19:13,807 - INFO - [main.py:667] - Dropping ID/number/phone columns: ['Holiday_Flag']
+2025-05-28 15:19:13,808 - INFO - [main.py:671] - Preserving datetime columns for time series analysis
+2025-05-28 15:19:13,808 - INFO - [main.py:673] - Data cleaning complete. Final dataframe shape: (6435, 7)
+2025-05-28 15:19:17,985 - INFO - [main.py:936] - Starting analysis with date_column=Date, target_column=Weekly_Sales
+2025-05-28 15:19:17,985 - INFO - [main.py:650] - Starting data cleaning process
+2025-05-28 15:19:17,988 - INFO - [main.py:671] - Preserving datetime columns for time series analysis
+2025-05-28 15:19:17,989 - INFO - [main.py:673] - Data cleaning complete. Final dataframe shape: (6435, 7)
+2025-05-28 15:19:17,989 - INFO - [main.py:940] - Data cleaned. Shape: (6435, 7)
+2025-05-28 15:19:17,997 - INFO - [main.py:944] - Time series prepared. Length: 2565
+2025-05-28 15:19:17,998 - INFO - [main.py:954] - Finding best SARIMA parameters...
+2025-05-28 15:20:17,744 - INFO - [main.py:957] - Best parameters found: order=(2, 1, 2), seasonal_order=(1, 0, 1, 12)
+2025-05-28 15:20:17,744 - INFO - [main.py:965] - Fitting new model
+2025-05-28 15:20:21,910 - INFO - [main.py:970] - Generating fitted values
+2025-05-28 15:20:21,910 - INFO - [main.py:974] - Calculating metrics
+2025-05-28 15:20:21,919 - INFO - [main.py:978] - Metrics calculated - MAE: 473001.06, RMSE: 559839.61, MAPE: nan%
+2025-05-28 15:20:21,919 - INFO - [main.py:981] - Generating forecast
+2025-05-28 15:20:21,923 - INFO - [main.py:1001] - Creating visualization plots
+2025-05-28 15:20:22,061 - INFO - [main.py:771] - Saved plot to D:\Langsmith-main\forecasting\static\plots\acf_20250528_152021.png
+2025-05-28 15:20:22,259 - INFO - [main.py:771] - Saved plot to D:\Langsmith-main\forecasting\static\plots\pacf_20250528_152022.png
+2025-05-28 15:20:22,339 - INFO - [main.py:1019] - Performing seasonal decomposition
+2025-05-28 15:20:22,963 - INFO - [main.py:771] - Saved plot to D:\Langsmith-main\forecasting\static\plots\decomposition_20250528_152022.png
+2025-05-28 15:20:23,434 - INFO - [main.py:1081] - Analysis completed successfully
+2025-05-28 15:23:25,811 - INFO - [main.py:717] - Trying to read CSV file with common delimiters...
+2025-05-28 15:23:25,826 - INFO - [main.py:730] - Successfully read CSV with delimiter: ','
+2025-05-28 15:23:25,826 - INFO - [main.py:679] - Starting data cleaning process
+2025-05-28 15:23:25,829 - INFO - [main.py:696] - Dropping ID/number/phone columns: ['Holiday_Flag']
+2025-05-28 15:23:25,830 - INFO - [main.py:700] - Preserving datetime columns for time series analysis
+2025-05-28 15:23:25,831 - INFO - [main.py:702] - Data cleaning complete. Final dataframe shape: (6435, 7)
+2025-05-28 15:23:31,152 - INFO - [main.py:965] - Starting analysis with date_column=Date, target_column=Weekly_Sales
+2025-05-28 15:23:31,153 - INFO - [main.py:679] - Starting data cleaning process
+2025-05-28 15:23:31,157 - INFO - [main.py:700] - Preserving datetime columns for time series analysis
+2025-05-28 15:23:31,157 - INFO - [main.py:702] - Data cleaning complete. Final dataframe shape: (6435, 7)
+2025-05-28 15:23:31,157 - INFO - [main.py:981] - Data cleaned. Shape: (6435, 7)
+2025-05-28 15:23:31,166 - INFO - [main.py:985] - Time series prepared. Length: 2565
+2025-05-28 15:23:31,167 - INFO - [main.py:995] - Finding best SARIMA parameters...
+2025-05-28 15:24:32,589 - INFO - [main.py:998] - Best parameters found: order=(2, 1, 2), seasonal_order=(1, 0, 1, 12)
+2025-05-28 15:24:32,589 - INFO - [main.py:1006] - Fitting new model
+2025-05-28 15:24:37,139 - INFO - [main.py:1011] - Generating fitted values
+2025-05-28 15:24:37,140 - INFO - [main.py:1015] - Calculating metrics
+2025-05-28 15:24:37,146 - INFO - [main.py:1019] - Metrics calculated - MAE: 473001.06, RMSE: 559839.61, MAPE: nan%
+2025-05-28 15:24:37,147 - INFO - [main.py:1022] - Generating forecast
+2025-05-28 15:24:37,150 - INFO - [main.py:1042] - Creating visualization plots
+2025-05-28 15:24:37,393 - INFO - [main.py:800] - Saved plot to D:\Langsmith-main\forecasting\static\plots\acf_20250528_152437.png
+2025-05-28 15:24:37,587 - INFO - [main.py:800] - Saved plot to D:\Langsmith-main\forecasting\static\plots\pacf_20250528_152437.png
+2025-05-28 15:24:37,662 - INFO - [main.py:1060] - Performing seasonal decomposition
+2025-05-28 15:24:38,406 - INFO - [main.py:800] - Saved plot to D:\Langsmith-main\forecasting\static\plots\decomposition_20250528_152437.png
+2025-05-28 15:24:38,925 - INFO - [main.py:1119] - Analysis completed successfully
+2025-05-28 15:25:39,030 - INFO - [main.py:717] - Trying to read CSV file with common delimiters...
+2025-05-28 15:25:39,032 - INFO - [main.py:730] - Successfully read CSV with delimiter: ','
+2025-05-28 15:25:39,032 - INFO - [main.py:679] - Starting data cleaning process
+2025-05-28 15:25:39,033 - INFO - [main.py:700] - Preserving datetime columns for time series analysis
+2025-05-28 15:25:39,034 - INFO - [main.py:702] - Data cleaning complete. Final dataframe shape: (144, 2)
+2025-05-28 15:25:44,738 - INFO - [main.py:717] - Trying to read CSV file with common delimiters...
+2025-05-28 15:25:44,740 - INFO - [main.py:730] - Successfully read CSV with delimiter: ','
+2025-05-28 15:25:44,740 - INFO - [main.py:679] - Starting data cleaning process
+2025-05-28 15:25:44,742 - INFO - [main.py:700] - Preserving datetime columns for time series analysis
+2025-05-28 15:25:44,742 - INFO - [main.py:702] - Data cleaning complete. Final dataframe shape: (144, 2)
+2025-05-28 15:25:47,787 - INFO - [main.py:965] - Starting analysis with date_column=Date, target_column=passengers
+2025-05-28 15:25:47,788 - INFO - [main.py:679] - Starting data cleaning process
+2025-05-28 15:25:47,790 - INFO - [main.py:700] - Preserving datetime columns for time series analysis
+2025-05-28 15:25:47,790 - INFO - [main.py:702] - Data cleaning complete. Final dataframe shape: (144, 2)
+2025-05-28 15:25:47,790 - INFO - [main.py:981] - Data cleaned. Shape: (144, 2)
+2025-05-28 15:25:47,912 - INFO - [main.py:985] - Time series prepared. Length: 144
+2025-05-28 15:25:47,912 - INFO - [main.py:995] - Finding best SARIMA parameters...
+2025-05-28 15:25:52,155 - INFO - [main.py:998] - Best parameters found: order=(2, 1, 2), seasonal_order=(0, 1, 1, 12)
+2025-05-28 15:25:52,155 - INFO - [main.py:1006] - Fitting new model
+2025-05-28 15:25:52,574 - INFO - [main.py:1011] - Generating fitted values
+2025-05-28 15:25:52,574 - INFO - [main.py:1015] - Calculating metrics
+2025-05-28 15:25:52,589 - INFO - [main.py:1019] - Metrics calculated - MAE: 10.21, RMSE: 16.14, MAPE: nan%
+2025-05-28 15:25:52,590 - INFO - [main.py:1022] - Generating forecast
+2025-05-28 15:25:52,593 - INFO - [main.py:1042] - Creating visualization plots
+2025-05-28 15:25:52,725 - INFO - [main.py:800] - Saved plot to D:\Langsmith-main\forecasting\static\plots\acf_20250528_152552.png
+2025-05-28 15:25:52,910 - INFO - [main.py:800] - Saved plot to D:\Langsmith-main\forecasting\static\plots\pacf_20250528_152552.png
+2025-05-28 15:25:52,986 - INFO - [main.py:1060] - Performing seasonal decomposition
+2025-05-28 15:25:53,551 - INFO - [main.py:800] - Saved plot to D:\Langsmith-main\forecasting\static\plots\decomposition_20250528_152553.png
+2025-05-28 15:25:53,893 - INFO - [main.py:1119] - Analysis completed successfully
