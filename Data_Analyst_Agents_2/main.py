@@ -18,6 +18,7 @@ from pydantic import BaseModel
 from openai import OpenAI
 import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend
+import seaborn as sns
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
@@ -106,10 +107,27 @@ def PlotCodeGeneratorTool(cols: List[str], query: str) -> str:
 
     Rules
     -----
-    1. Use pandas for data manipulation and matplotlib.pyplot (as plt) for plotting.
-    2. Assign the final result (DataFrame, Series, scalar *or* matplotlib Figure) to a variable named `result`.
-    3. Create only ONE relevant plot. Set `figsize=(8,6)`, add title/labels.
-    4. Return your answer inside a single markdown fence that starts with ```python and ends with ```.
+    1. Use `pandas` for all data processing. For visualization, you may use either:
+    - `matplotlib.pyplot as plt`
+    - or `seaborn as sns` (recommended for enhanced aesthetics and ease of use).
+
+    2. Perform data cleansing before any plotting or analysis:
+    2.1. Drop unrelated identifier columns (e.g., 'id', 'user_id', or any unique identifiers).
+    2.2. Handle missing values:
+            - For numeric columns: fill missing values with the column mean.
+            - For object (categorical) columns: fill missing values with the column mode.
+    2.3. Label-encode object-type columns only if they are needed for computation or plotting:
+            - Use `pd.factorize()` or `sklearn.preprocessing.LabelEncoder`.
+
+    3. Create exactly one meaningful plot:
+    - If using `matplotlib`, set `figsize=(8, 6)` using `plt.subplots()`.
+    - If using `seaborn`, you may use its internal figure handling but ensure the plot size is visually appropriate.
+    - Add a clear title, and label the x-axis and y-axis.
+    - Use colors or grouping variables meaningfully (e.g., `hue`, `c`, `style`, etc.).
+
+    4. Assign the final result (whether a DataFrame, Series, scalar value, or plot Figure) to a variable named `result`.
+
+    5. Return only the Python code, wrapped inside a single markdown code block that begins with ```python and ends with ```.
     """
 
 def CodeWritingTool(cols: List[str], query: str) -> str:
@@ -121,9 +139,19 @@ def CodeWritingTool(cols: List[str], query: str) -> str:
 
     Rules
     -----
-    1. Use pandas operations on `df` only.
-    2. Assign the final result to `result`.
-    3. Wrap the snippet in a single ```python code fence (no extra prose).
+    1. Use **only pandas operations** on the DataFrame `df`. Do not use any external libraries like matplotlib or scikit-learn.
+
+    2. Assign the final output (DataFrame, Series, or scalar value) to a variable named `result`.
+
+    3. Perform **data cleansing** before any analysis or transformation:
+    3.1. Drop unrelated identifier columns, such as 'id', 'user_id', or other unique IDs not needed for analysis.
+    3.2. Handle missing values:
+        - For numeric columns: fill missing values using the column's mean.
+        - For object (categorical) columns: fill missing values using the column's mode.
+    3.3. If any object-type columns are needed in the result, apply label encoding:
+        - Use `df[col] = pd.factorize(df[col])[0]` or another suitable pandas-only approach.
+
+    4. Wrap the entire code snippet inside a single markdown code block that begins with ```python and ends with ```. Do not include any explanation, comments, or output — only valid executable Python code.  
     """
 
 def CodeGenerationAgent(query: str, df: pd.DataFrame):
