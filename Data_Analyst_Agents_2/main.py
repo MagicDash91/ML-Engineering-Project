@@ -30,6 +30,8 @@ import google.generativeai as genai
 import google.generativeai.types as gtypes
 from langchain.vectorstores import FAISS
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from fpdf import FPDF
+from datetime import datetime
 
 import tempfile
 
@@ -181,6 +183,7 @@ def ExecutionAgent(code: str, df: pd.DataFrame, should_plot: bool):
     if should_plot:
         plt.rcParams["figure.dpi"] = 100
         env["plt"] = plt
+        env["sns"] = sns
         env["io"] = io
     try:
         exec(code, {}, env)
@@ -1111,11 +1114,16 @@ async def upload_file(file: UploadFile = File(...), session_id: str = Form(...))
 async def chat(request: QueryRequest):
     """Handle chat queries and return responses."""
 
+    user_query_lower = request.query.lower()
+
+    # Check for PDF generation command first
+    if "pdf" in user_query_lower:
+        return await generate_pdf_report(request.session_id)
+
     # Define keywords that trigger Gemini-based insight generation
     insight_keywords = ["actionable insight", "conclusion", "insight", "insights", "analysis", "analyze", "summary", "summarize"]
     
     # Check if user query contains any of the insight keywords (case-insensitive)
-    user_query_lower = request.query.lower()
     should_use_gemini = any(keyword in user_query_lower for keyword in insight_keywords)
 
     if should_use_gemini:
@@ -1236,6 +1244,16 @@ async def chat(request: QueryRequest):
         # Store FAISS index path in session for future use
         session['faiss_index_path'] = faiss_index_path
 
+        # Store message in history (GEMINI RESPONSE)
+        session['messages'].append({
+            'query': request.query,
+            'response': insights,  # This is the full Gemini response
+            'plot_url': None,
+            'code': None,
+            'thinking': "Generated insights using Gemini LLM based on document analysis.",
+            'timestamp': pd.Timestamp.now().isoformat()
+        })
+
         return ChatResponse(
             response=insights,
             plot_url=None,
@@ -1282,10 +1300,11 @@ async def chat(request: QueryRequest):
                 fig = result.figure if isinstance(result, plt.Axes) else result
                 plot_url = save_plot_to_static(fig, request.session_id)
             
-            # Store message in history
+            # Store message in history (NVIDIA LLAMA RESPONSE)
             session['messages'].append({
                 'query': request.query,
-                'response': reasoning,
+                'response': reasoning,  # This is the full AI reasoning about the visualization
+                'plot_url': plot_url,   # This is the plot URL
                 'code': code,
                 'thinking': thinking,
                 'timestamp': pd.Timestamp.now().isoformat()
@@ -1307,43 +1326,116 @@ async def chat(request: QueryRequest):
                 code=code if 'code' in locals() else None
             )
 
-@app.get("/session/{session_id}")
-async def get_session_info(session_id: str):
-    """Get information about a specific session."""
+class PDF(FPDF):
+    def header(self):
+        self.set_font('Arial', 'B', 12)
+        self.cell(0, 10, 'Data Analysis Chat Report', 0, 1, 'C')
+        self.set_font('Arial', '', 8)
+        self.cell(0, 5, f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", 0, 1, 'C')
+        self.ln(10)
+
+    def footer(self):
+        self.set_y(-15)
+        self.set_font('Arial', 'I', 8)
+        self.cell(0, 10, f'Page {self.page_no()}/{{nb}}', 0, 0, 'C')
+
+    def add_user_message(self, text):
+        self.set_font('Arial', 'B', 11)
+        self.set_fill_color(220, 220, 220)
+        text = f"You: {text}".encode('latin-1', 'replace').decode('latin-1')
+        self.multi_cell(0, 8, text, 1, 'L', 1)
+        self.ln(2)
+    
+    def add_ai_message(self, text, code=None, plot_url=None):
+        self.set_font('Arial', '', 11)
+        self.set_fill_color(240, 240, 240)
+        text = f"AI Assistant: {text}".encode('latin-1', 'replace').decode('latin-1')
+        self.multi_cell(0, 8, text, 1, 'L', 1)
+
+        if code:
+            self.ln(2)
+            self.set_font('Courier', '', 10)
+            self.set_fill_color(250, 250, 250)
+            code_text = code.encode('latin-1', 'replace').decode('latin-1')
+            self.multi_cell(0, 5, code_text, border=1, align='L', fill=1)
+        
+        if plot_url:
+            self.ln(2)
+            plot_path = os.path.join(os.getcwd(), plot_url.lstrip('/\\'))
+            if os.path.exists(plot_path):
+                page_width = self.w - 2 * self.l_margin
+                self.image(plot_path, w=page_width * 0.8)
+            else:
+                self.set_font('Arial', 'I', 10)
+                self.set_text_color(255, 0, 0)
+                self.cell(0, 10, f"[Plot image not found: {plot_path}]")
+                self.set_text_color(0, 0, 0)
+        
+        self.ln(5)
+
+async def generate_pdf_report(session_id: str):
     if session_id not in sessions:
-        raise HTTPException(status_code=404, detail="Session not found")
-    
-    session = sessions[session_id]
-    df = session.get('df')
-    
-    if df is None:
-        raise HTTPException(status_code=400, detail="No data in session")
-    
-    return {
-        "session_id": session_id,
-        "filename": session.get('filename', 'unknown'),
-        "rows": len(df),
-        "columns": df.columns.tolist(),
-        "message_count": len(session.get('messages', []))
-    }
+        raise HTTPException(status_code=400, detail="Session not found. Please upload a CSV file first.")
+        
+    session = sessions.get(session_id, {})
+    messages = session.get('messages', [])
+        
+    if not messages:
+        return ChatResponse(
+            response="There is no conversation history to generate a PDF from.",
+            plot_url=None,
+        )
 
-@app.delete("/session/{session_id}")
-async def clear_session(session_id: str):
-    """Clear a specific session."""
-    if session_id in sessions:
-        del sessions[session_id]
-        return {"message": "Session cleared successfully"}
-    else:
-        raise HTTPException(status_code=404, detail="Session not found")
+    pdf = PDF()
+    pdf.alias_nb_pages()
+    pdf.add_page()
+    pdf.set_auto_page_break(auto=True, margin=15)
+        
+    pdf.set_font('Arial', 'B', 16)
+    pdf.cell(0, 10, f"Chat Report for Session: {session_id}", 0, 1, 'C')
+    pdf.set_font('Arial', '', 12)
+    pdf.cell(0, 10, f"Dataset: {session.get('filename', 'N/A')}", 0, 1, 'C')
+    pdf.ln(5)
 
-@app.get("/health")
-async def health_check():
-    """Health check endpoint."""
-    return {
-        "status": "healthy",
-        "active_sessions": len(sessions),
-        "timestamp": pd.Timestamp.now().isoformat()
-    }
+    for message in messages:
+        # Add user query first
+        if message.get('query'):
+            pdf.add_user_message(message['query'])
+        
+        # Then add AI Assistant response
+        # Check if message has both response text and visualization
+        if message.get('response') and message.get('plot_url'):
+            # This is a visualization response with description (NVIDIA LLAMA)
+            pdf.add_ai_message(message['response'], code=None, plot_url=message['plot_url'])
+        
+        # Check if message has only text response (GEMINI)
+        elif message.get('response'):
+            # This is a text-only response from Gemini
+            pdf.add_ai_message(message['response'], code=None, plot_url=None)
+        
+        # Check if message has only visualization (unlikely, but just in case)
+        elif message.get('plot_url'):
+            # This is a visualization without description
+            pdf.add_ai_message("[Visualization]", code=None, plot_url=message['plot_url'])
+
+    pdf_file_name = f"report_{session_id}_{datetime.now().strftime('%Y%m%d%H%M%S')}.pdf"
+    pdf_path = os.path.join("static", pdf_file_name)
+        
+    try:
+        pdf.output(pdf_path)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate PDF: {e}")
+        
+    pdf_url = f"/static/{pdf_file_name}"
+        
+    response_text = f"I have generated a PDF report of our conversation. You can download it here: [{pdf_file_name}]({pdf_url})"
+        
+    return ChatResponse(
+        response=response_text,
+        plot_url=None,
+        thinking=f"Generated a PDF report with {len(messages)} message pairs.",
+        code=None
+    )
 
 if __name__ == "__main__":
     import uvicorn
