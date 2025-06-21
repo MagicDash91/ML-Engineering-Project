@@ -1428,7 +1428,12 @@ async def generate_pdf_report(session_id: str):
         
     pdf_url = f"/static/{pdf_file_name}"
         
-    response_text = f"I have generated a PDF report of our conversation. You can download it here: [{pdf_file_name}]({pdf_url})"
+    response_text = (
+        f'I have generated a PDF report of our conversation. '
+        f'<a href="{pdf_url}" class="btn btn-success" target="_blank" style="margin-left:10px;">'
+        f'<i class="fas fa-file-pdf"></i> Download PDF Report'
+        f'</a>'
+    )
         
     return ChatResponse(
         response=response_text,
