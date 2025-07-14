@@ -26,11 +26,11 @@ The system uses a LangGraph-based workflow with the following components:
 
 ## Project Screenshots :
 
-![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Adaptive_RAG/a1.JPG)
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Adaptive_RAG/a1.jpg)
 
-![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Adaptive_RAG/a2.JPG)
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Adaptive_RAG/a2.jpg)
 
-![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Adaptive_RAG/a3.JPG)
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Adaptive_RAG/a3.jpg)
 
 ![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Adaptive_RAG/a4.webp)
 
