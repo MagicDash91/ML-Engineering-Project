@@ -24,6 +24,17 @@ The system uses a LangGraph-based workflow with the following components:
 5. **Question Rewriting**: Improves questions for better retrieval
 6. **Web Search**: Falls back to web search when documents are insufficient
 
+## Project Screenshots :
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/a1.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/a2.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/a3.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/a4.webp)
+
+
 ## 🚀 Getting Started
 
 ### Prerequisites
