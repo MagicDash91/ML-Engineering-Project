@@ -127,9 +127,69 @@ def PlotCodeGeneratorTool(cols: List[str], query: str) -> str:
     - Add a clear title, and label the x-axis and y-axis.
     - Use colors or grouping variables meaningfully (e.g., `hue`, `c`, `style`, etc.).
 
-    4. Assign the final result (whether a DataFrame, Series, scalar value, or plot Figure) to a variable named `result`.
+    4. If the user asks to use SpaCy:
+    - First, ensure the model is available:
+        ```python
+        import spacy
+        try:
+            nlp = spacy.load("en_core_web_sm")
+        except OSError:
+            from spacy.cli import download
+            download("en_core_web_sm")
+            nlp = spacy.load("en_core_web_sm")
+        ```
 
-    5. Return only the Python code, wrapped inside a single markdown code block that begins with ```python and ends with ```.
+    - Then proceed with SpaCy-based operations (e.g., NER or POS tagging) using the `nlp` object.
+
+    5. If the user asks to visualize the number of cases for each country or region:
+
+    - First, try to import `geopandas`. If not available, attempt to install it. Then load world map data from the Natural Earth CDN.
+
+    - Example:
+        ```python
+        import pandas as pd
+        import matplotlib.pyplot as plt
+
+        try:
+            import geopandas as gpd
+        except ImportError:
+            import subprocess
+            import sys
+            try:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "geopandas"])
+                import geopandas as gpd
+            except Exception:
+                gpd = None
+
+        if gpd:
+            url = "https://naturalearth.s3.amazonaws.com/110m_cultural/ne_110m_admin_0_countries.zip"
+            world = gpd.read_file(url)
+
+            # df_cases = pd.DataFrame({{'country': [...], 'cases': [...]}})
+            merged = world.merge(df_cases, how="left", left_on="NAME", right_on="country")
+            merged["cases"] = merged["cases"].fillna(0)
+
+            fig, ax = plt.subplots(figsize=(12, 8))
+            merged.plot(column="cases", ax=ax, legend=True, cmap="OrRd", edgecolor="black")
+            ax.set_title("Number of Cases by Country or Region")
+        else:
+            fig, ax = plt.subplots(figsize=(10, 6))
+            df_cases.sort_values("cases", ascending=False).plot.bar(x="country", y="cases", ax=ax)
+            ax.set_title("Cases by Country or Region")
+            ax.set_xlabel("Country")
+            ax.set_ylabel("Number of Cases")
+            plt.xticks(rotation=90)
+
+        result = fig
+        ```
+
+    - Always assign the final output to a variable named `result`.
+
+
+
+    6. Assign the final result (whether a DataFrame, Series, scalar value, or plot Figure) to a variable named `result`.
+
+    7. Return only the Python code, wrapped inside a single markdown code block that begins with ```python and ends with ```.
     """
 
 def CodeWritingTool(cols: List[str], query: str) -> str:
@@ -152,8 +212,67 @@ def CodeWritingTool(cols: List[str], query: str) -> str:
         - For object (categorical) columns: fill missing values using the column's mode.
     3.3. If any object-type columns are needed in the result, apply label encoding:
         - Use `df[col] = pd.factorize(df[col])[0]` or another suitable pandas-only approach.
+    
+    4. If the user asks to use SpaCy:
+       - First, ensure the model is available:
+            ```python
+            import spacy
+            try:
+                nlp = spacy.load("en_core_web_sm")
+            except OSError:
+                from spacy.cli import download
+                download("en_core_web_sm")
+                nlp = spacy.load("en_core_web_sm")
+            ```
+       - Then proceed with SpaCy-based operations (e.g., NER or POS tagging) using the `nlp` object.
 
-    4. Wrap the entire code snippet inside a single markdown code block that begins with ```python and ends with ```. Do not include any explanation, comments, or output — only valid executable Python code.  
+    5. If the user asks to visualize the number of cases for each country or region:
+
+    - First, try to import `geopandas`. If not available, attempt to install it. Then load world map data from the Natural Earth CDN.
+
+    - Example:
+        ```python
+        import pandas as pd
+        import matplotlib.pyplot as plt
+
+        try:
+            import geopandas as gpd
+        except ImportError:
+            import subprocess
+            import sys
+            try:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "geopandas"])
+                import geopandas as gpd
+            except Exception:
+                gpd = None
+
+        if gpd:
+            url = "https://naturalearth.s3.amazonaws.com/110m_cultural/ne_110m_admin_0_countries.zip"
+            world = gpd.read_file(url)
+
+            # df_cases = pd.DataFrame({{'country': [...], 'cases': [...]}})
+            merged = world.merge(df_cases, how="left", left_on="NAME", right_on="country")
+            merged["cases"] = merged["cases"].fillna(0)
+
+            fig, ax = plt.subplots(figsize=(12, 8))
+            merged.plot(column="cases", ax=ax, legend=True, cmap="OrRd", edgecolor="black")
+            ax.set_title("Number of Cases by Country or Region")
+        else:
+            fig, ax = plt.subplots(figsize=(10, 6))
+            df_cases.sort_values("cases", ascending=False).plot.bar(x="country", y="cases", ax=ax)
+            ax.set_title("Cases by Country or Region")
+            ax.set_xlabel("Country")
+            ax.set_ylabel("Number of Cases")
+            plt.xticks(rotation=90)
+
+        result = fig
+        ```
+
+    - Always assign the final output to a variable named `result`.
+
+
+
+    6. Wrap the entire code snippet inside a single markdown code block that begins with ```python and ends with ```. Do not include any explanation, comments, or output — only valid executable Python code.  
     """
 
 def CodeGenerationAgent(query: str, df: pd.DataFrame):
