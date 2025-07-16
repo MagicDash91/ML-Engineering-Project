@@ -185,11 +185,126 @@ def PlotCodeGeneratorTool(cols: List[str], query: str) -> str:
 
     - Always assign the final output to a variable named `result`.
 
+    6. If the user asks to explain model predictions or mentions "SHAP":
+
+    - Ensure the `shap` library is installed:
+        ```python
+        try:
+            import shap
+        except ImportError:
+            import subprocess
+            import sys
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "shap"])
+            import shap
+        ```
+
+    - Use SHAP `TreeExplainer` with your trained model:
+        ```python
+        explainer = shap.TreeExplainer(model)
+        shap_values = explainer(X_test)
+        ```
+
+    - Then, for **bar plot of global feature importance**:
+        ```python
+        # Handle both multi-class and binary/regression cases
+        if hasattr(shap_values, 'values') and len(shap_values.values.shape) == 3:
+            # Multi-class case: use the first class or specify class index
+            shap.plots.bar(shap_values[:, :, 0])  # For class 0
+        else:
+            # Binary classification or regression
+            shap.plots.bar(shap_values)
+        ```
+
+    - For **waterfall plot of one prediction**:
+        ```python
+        # For one specific prediction (e.g., first test sample)
+        if hasattr(shap_values, 'values') and len(shap_values.values.shape) == 3:
+            # Multi-class: show explanation for first sample, first class
+            shap.plots.waterfall(shap_values[0, :, 0])
+        else:
+            # Binary classification or regression
+            shap.plots.waterfall(shap_values[0])
+        ```
+
+    - Do **not** use `matplotlib.pyplot` for SHAP visualizations.
+    - Note: SHAP plots display directly and don't return objects to assign to `result`.
 
 
-    6. Assign the final result (whether a DataFrame, Series, scalar value, or plot Figure) to a variable named `result`.
 
-    7. Return only the Python code, wrapped inside a single markdown code block that begins with ```python and ends with ```.
+    7. If the user asks for sentiment analysis or mentions "sentiment", "emotion", or "TextBlob":
+       - IMPORTANT: Always put installation code FIRST, before any imports:
+            ```python
+            import subprocess
+            import sys
+            import importlib
+            
+            # Install TextBlob if not available
+            try:
+                import textblob
+            except ImportError:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "textblob"])
+                importlib.invalidate_caches()
+                import textblob
+            
+            # Install and setup NLTK dependencies
+            try:
+                import nltk
+            except ImportError:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "nltk"])
+                import nltk
+            
+            # Download required corpora
+            try:
+                nltk.data.find('tokenizers/punkt')
+                nltk.data.find('corpora/brown')
+            except LookupError:
+                nltk.download('punkt', quiet=True)
+                nltk.download('brown', quiet=True)
+            
+            # Now import everything needed
+            from textblob import TextBlob
+            import pandas as pd
+            import matplotlib.pyplot as plt
+            ```
+       - Then perform sentiment analysis on text columns. Look for columns containing text data (e.g., 'full_text', 'text', 'content', 'message', 'review', etc.):
+            ```python
+            # Identify text column (common names: full_text, text, content, message, review)
+            text_columns = [col for col in df.columns if any(keyword in col.lower() for keyword in ['text', 'content', 'message', 'review', 'comment'])]
+            text_col = text_columns[0] if text_columns else df.select_dtypes(include=['object']).columns[0]
+            
+            # Perform sentiment analysis
+            text_data = df[text_col].dropna().astype(str)
+            sentiments = []
+            
+            for text in text_data:
+                blob = TextBlob(text)
+                polarity = blob.sentiment.polarity
+                subjectivity = blob.sentiment.subjectivity
+                
+                # Determine sentiment label
+                if polarity > 0.1:
+                    sentiment_label = 'positive'
+                elif polarity < -0.1:
+                    sentiment_label = 'negative'
+                else:
+                    sentiment_label = 'neutral'
+                
+                sentiments.append({{
+                    'polarity': polarity,
+                    'subjectivity': subjectivity,
+                    'sentiment_label': sentiment_label
+                }})
+            
+            # Add sentiment scores to original dataframe
+            df_sentiment = pd.DataFrame(sentiments)
+            result = pd.concat([df.reset_index(drop=True), df_sentiment], axis=1)
+            ```
+       - NEVER import TextBlob at the top of the file. Always install first, then import.
+
+
+    8. Assign the final result (whether a DataFrame, Series, scalar value, or plot Figure) to a variable named `result`.
+
+    9. Return only the Python code, wrapped inside a single markdown code block that begins with ```python and ends with ```.
     """
 
 def CodeWritingTool(cols: List[str], query: str) -> str:
@@ -270,9 +385,122 @@ def CodeWritingTool(cols: List[str], query: str) -> str:
 
     - Always assign the final output to a variable named `result`.
 
+    6. If the user asks to explain model predictions or mentions "SHAP":
+
+    - Ensure the `shap` library is installed:
+        ```python
+        try:
+            import shap
+        except ImportError:
+            import subprocess
+            import sys
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "shap"])
+            import shap
+        ```
+
+    - Use SHAP `TreeExplainer` with your trained model:
+        ```python
+        explainer = shap.TreeExplainer(model)
+        shap_values = explainer(X_test)
+        ```
+
+    - Then, for **bar plot of global feature importance**:
+        ```python
+        # Handle both multi-class and binary/regression cases
+        if hasattr(shap_values, 'values') and len(shap_values.values.shape) == 3:
+            # Multi-class case: use the first class or specify class index
+            shap.plots.bar(shap_values[:, :, 0])  # For class 0
+        else:
+            # Binary classification or regression
+            shap.plots.bar(shap_values)
+        ```
+
+    - For **waterfall plot of one prediction**:
+        ```python
+        # For one specific prediction (e.g., first test sample)
+        if hasattr(shap_values, 'values') and len(shap_values.values.shape) == 3:
+            # Multi-class: show explanation for first sample, first class
+            shap.plots.waterfall(shap_values[0, :, 0])
+        else:
+            # Binary classification or regression
+            shap.plots.waterfall(shap_values[0])
+        ```
+
+    - Do **not** use `matplotlib.pyplot` for SHAP visualizations.
+    - Note: SHAP plots display directly and don't return objects to assign to `result`.
 
 
-    6. Wrap the entire code snippet inside a single markdown code block that begins with ```python and ends with ```. Do not include any explanation, comments, or output — only valid executable Python code.  
+    7. If the user asks for sentiment analysis or mentions "sentiment", "emotion", or "TextBlob":
+       - IMPORTANT: Always put installation code FIRST, before any imports:
+            ```python
+            import subprocess
+            import sys
+            import importlib
+            
+            # Install TextBlob if not available
+            try:
+                import textblob
+            except ImportError:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "textblob"])
+                importlib.invalidate_caches()
+                import textblob
+            
+            # Install and setup NLTK dependencies
+            try:
+                import nltk
+            except ImportError:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "nltk"])
+                import nltk
+            
+            # Download required corpora
+            try:
+                nltk.data.find('tokenizers/punkt')
+                nltk.data.find('corpora/brown')
+            except LookupError:
+                nltk.download('punkt', quiet=True)
+                nltk.download('brown', quiet=True)
+            
+            # Now import everything needed
+            from textblob import TextBlob
+            import pandas as pd
+            import matplotlib.pyplot as plt
+            ```
+       - Then perform sentiment analysis on text columns. Look for columns containing text data (e.g., 'full_text', 'text', 'content', 'message', 'review', etc.):
+            ```python
+            # Identify text column (common names: full_text, text, content, message, review)
+            text_columns = [col for col in df.columns if any(keyword in col.lower() for keyword in ['text', 'content', 'message', 'review', 'comment'])]
+            text_col = text_columns[0] if text_columns else df.select_dtypes(include=['object']).columns[0]
+            
+            # Perform sentiment analysis
+            text_data = df[text_col].dropna().astype(str)
+            sentiments = []
+            
+            for text in text_data:
+                blob = TextBlob(text)
+                polarity = blob.sentiment.polarity
+                subjectivity = blob.sentiment.subjectivity
+                
+                # Determine sentiment label
+                if polarity > 0.1:
+                    sentiment_label = 'positive'
+                elif polarity < -0.1:
+                    sentiment_label = 'negative'
+                else:
+                    sentiment_label = 'neutral'
+                
+                sentiments.append({{
+                    'polarity': polarity,
+                    'subjectivity': subjectivity,
+                    'sentiment_label': sentiment_label
+                }})
+            
+            # Add sentiment scores to original dataframe
+            df_sentiment = pd.DataFrame(sentiments)
+            result = pd.concat([df.reset_index(drop=True), df_sentiment], axis=1)
+            ```
+       - NEVER import TextBlob at the top of the file. Always install first, then import.
+
+    8. Wrap the entire code snippet inside a single markdown code block that begins with ```python and ends with ```. Do not include any explanation, comments, or output — only valid executable Python code.  
     """
 
 def CodeGenerationAgent(query: str, df: pd.DataFrame):
