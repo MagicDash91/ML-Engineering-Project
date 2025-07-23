@@ -66,6 +66,9 @@ A Resume Matcher with Google Gemini and FastAPI, enabling:
 ### 🌐 Web Frameworks
 - Flask, FastAPI
 
+### 🌐 Backend
+- Celery, Redis
+
 ## 📬 Let’s Connect!
 
 - 💼 [LinkedIn](https://www.linkedin.com/in/michael-wiryaseputra/)
