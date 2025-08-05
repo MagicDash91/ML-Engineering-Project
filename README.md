@@ -52,6 +52,7 @@ A Resume Matcher with Google Gemini and FastAPI, enabling:
 
 ### 🧠 LLM & RAG Apps
 - LangChain, LlamaIndex, OpenAI, Google Gemini, Langgraph, Langsmith
+- LLM Finetuning : LoRA, QLoRA (Unsloth)
 - Vector DBs: FAISS, ChromaDB
 
 ### ☁️ Cloud & Deployment
