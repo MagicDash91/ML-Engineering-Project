@@ -32,6 +32,8 @@ from langchain.vectorstores import FAISS
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from fpdf import FPDF
 from datetime import datetime
+import os
+from PIL import Image
 
 import tempfile
 
@@ -91,7 +93,7 @@ def QueryUnderstandingTool(query: str) -> bool:
     ]
     
     response = client.chat.completions.create(
-        model="nvidia/llama-3.1-nemotron-ultra-253b-v1",
+        model="nvidia/llama-3.3-nemotron-super-49b-v1",
         messages=messages,
         temperature=0.1,
         max_tokens=5
@@ -514,7 +516,7 @@ def CodeGenerationAgent(query: str, df: pd.DataFrame):
     ]
 
     response = client.chat.completions.create(
-        model="nvidia/llama-3.1-nemotron-ultra-253b-v1",
+        model="nvidia/llama-3.3-nemotron-super-49b-v1",
         messages=messages,
         temperature=0.2,
         max_tokens=1024
@@ -573,7 +575,7 @@ def ReasoningAgent(query: str, result: Any):
     prompt = ReasoningCurator(query, result)
 
     response = client.chat.completions.create(
-        model="nvidia/llama-3.1-nemotron-ultra-253b-v1",
+        model="nvidia/llama-3.3-nemotron-super-49b-v1",
         messages=[
             {"role": "system", "content": "detailed thinking on. You are an insightful data analyst."},
             {"role": "user", "content": prompt}
@@ -652,7 +654,7 @@ def DataInsightAgent(df: pd.DataFrame) -> str:
     prompt = DataFrameSummaryTool(df)
     try:
         response = client.chat.completions.create(
-            model="nvidia/llama-3.1-nemotron-ultra-253b-v1",
+            model="nvidia/llama-3.3-nemotron-super-49b-v1",
             messages=[
                 {"role": "system", "content": "You are a data analyst who generates clear, concise, and insightful markdown-formatted summaries of datasets. Do not show step-by-step reasoning. Use professional tone and focus on key insights only. Structure responses with: ## 🧾 Dataset Overview (describe what the dataset contains, its structure, any unique aspects), ## 📌 Key Observations (highlight missing data, outliers, data types, or quality issues), and ## ❓ Exploratory Questions (suggest 3–4 analysis questions, focusing on relationships, trends, or business relevance). Use markdown formatting elements like headers, bullet points, bold, and inline code where appropriate. Be brief but informative. Avoid technical jargon and unnecessary elaboration unless relevant."},
                 {"role": "user", "content": prompt}
@@ -1460,6 +1462,10 @@ async def upload_file(file: UploadFile = File(...), session_id: str = Form(...))
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: QueryRequest):
     """Handle chat queries and return responses."""
+    import os
+    import google.generativeai as genai
+    from PIL import Image
+    import tempfile
 
     user_query_lower = request.query.lower()
 
@@ -1641,16 +1647,61 @@ async def chat(request: QueryRequest):
             # Generate reasoning
             thinking, reasoning = ReasoningAgent(request.query, result)
             
-            # Handle plot saving
+            # Handle plot saving and analysis
             plot_url = None
+            enhanced_reasoning = reasoning  # Default to original reasoning
+            
             if isinstance(result, (plt.Figure, plt.Axes)):
                 fig = result.figure if isinstance(result, plt.Axes) else result
                 plot_url = save_plot_to_static(fig, request.session_id)
+                
+                # Add visualization analysis with Google Gemini
+                if plot_url:
+                    try:
+                        # Get the full path to the saved plot
+                        plot_path = os.path.join("static", plot_url.split("/static/")[-1])
+                        
+                        if os.path.exists(plot_path):
+                            # Open the image for Gemini analysis
+                            img_plot = Image.open(plot_path)
+                            
+                            # Create analysis prompt
+                            analysis_prompt = """
+                            As a data analyst, provide a comprehensive analysis of this visualization. Your analysis should include:
+
+                            - A detailed examination of the patterns, trends, and distributions shown in the plot
+                            - Identification of key insights, outliers, correlations, or notable features
+                            - Interpretation of what these patterns suggest about the underlying data
+                            - Discussion of any significant relationships or anomalies visible in the visualization
+                            - Strategic insights and actionable recommendations based on the visual findings
+                            - Context about what these results might mean for decision-making
+
+                            Focus on providing deep, meaningful insights that go beyond surface-level observations. 
+                            Transform this visualization into clear, data-informed conclusions and recommendations.
+
+                            Avoid mentioning the specific tools or platforms used for this analysis.
+                            """
+                            
+                            # Generate enhanced analysis using Gemini
+                            genai.configure(api_key="AIzaSyAMAYxkjP49QZRCg21zImWWAu7c3YHJ0a8")
+                            model = genai.GenerativeModel("gemini-2.0-flash")
+                            gemini_response = model.generate_content(
+                                [analysis_prompt, img_plot],
+                                generation_config={"temperature": 0},
+                            ).text
+                            
+                            # Combine original reasoning with Gemini analysis
+                            enhanced_reasoning = f"{reasoning}\n\n## Visualization Analysis\n\n{gemini_response}"
+                            
+                    except Exception as e:
+                        print(f"Error in Gemini analysis: {str(e)}")
+                        # Continue with original reasoning if Gemini analysis fails
+                        pass
             
-            # Store message in history (NVIDIA LLAMA RESPONSE)
+            # Store message in history (NVIDIA LLAMA RESPONSE + Enhanced Analysis)
             session['messages'].append({
                 'query': request.query,
-                'response': reasoning,  # This is the full AI reasoning about the visualization
+                'response': enhanced_reasoning,  # This now includes both original reasoning and Gemini analysis
                 'plot_url': plot_url,   # This is the plot URL
                 'code': code,
                 'thinking': thinking,
@@ -1658,7 +1709,7 @@ async def chat(request: QueryRequest):
             })
             
             return ChatResponse(
-                response=reasoning,
+                response=enhanced_reasoning,
                 plot_url=plot_url,
                 thinking=thinking,
                 code=code
