@@ -302,11 +302,35 @@ def PlotCodeGeneratorTool(cols: List[str], query: str) -> str:
             result = pd.concat([df.reset_index(drop=True), df_sentiment], axis=1)
             ```
        - NEVER import TextBlob at the top of the file. Always install first, then import.
+    
+    8. **Dashboard Mode (triggered when the query includes 'dashboard'):**
+       - you can use piechart, barchart, boxplot and other charts to build a compact dashboard with multiple charts in a single figure using matplotlib/seaborn.
 
+    9. **Time Series Analysis Mode (triggered when the query includes 'forecast' or 'forecasting'):**
+        - Create **4 subplots in a single figure** (`fig, axes = plt.subplots(2, 2, figsize=(14, 10))`):
+            a) **Original + 30-Step Forecast** — Overlay forecast in a contrasting color with a legend.
+            b) **First Difference** — Compute `target_series.diff()` and plot, removing NaN from the start.
+            c) **Moving Average Plot** — Rolling mean (window=7) overlaid on the original.
+            d) **Rolling Standard Deviation** — Rolling std (window=7) to assess volatility changes.
+        - **Column Selection Logic:**
+            - If `"High"` exists (case-insensitive), use it.
+            - Otherwise, pick the numeric column with highest variance.
+            - If no numeric column exists, raise an error.
+        - **Time Column Handling:**
+            - Detect date/time column by name (`date`, `time`, `year`, `month`) and convert with `pd.to_datetime()`.
+            - Sort by this column before plotting.
+        - **Aesthetics:**
+            - Add clear titles to each subplot (`Original + Forecast`, `First Difference`, `Moving Average`, `Rolling Std`).
+            - Rotate x-axis labels by 30°.
+            - Use `sns.set_theme(style="whitegrid")` if available.
+            - Limit y-axis in all plots to min/max of the chosen series ± 10% for clarity.
+        - **Output:**
+            - Always call `plt.tight_layout()`.
+            - Assign the final `matplotlib` Figure to `result`.
 
-    8. Assign the final result (whether a DataFrame, Series, scalar value, or plot Figure) to a variable named `result`.
+    10. Assign the final result (whether a DataFrame, Series, scalar value, or plot Figure) to a variable named `result`.
 
-    9. Return only the Python code, wrapped inside a single markdown code block that begins with ```python and ends with ```.
+    11. Return only the Python code, wrapped inside a single markdown code block that begins with ```python and ends with ```.
     """
 
 def CodeWritingTool(cols: List[str], query: str) -> str:
@@ -501,8 +525,33 @@ def CodeWritingTool(cols: List[str], query: str) -> str:
             result = pd.concat([df.reset_index(drop=True), df_sentiment], axis=1)
             ```
        - NEVER import TextBlob at the top of the file. Always install first, then import.
+    
+    8. **Dashboard Mode (triggered when the query includes 'dashboard'):**
+       - you can use piechart, barchart, boxplot and other charts to build a compact dashboard with multiple charts in a single figure using matplotlib/seaborn.
+    
+    9. **Time Series Analysis Mode (triggered when the query includes 'forecast' or 'forecasting'):**
+        - Create **4 subplots in a single figure** (`fig, axes = plt.subplots(2, 2, figsize=(14, 10))`):
+            a) **Original + 30-Step Forecast** — Overlay forecast in a contrasting color with a legend.
+            b) **First Difference** — Compute `target_series.diff()` and plot, removing NaN from the start.
+            c) **Moving Average Plot** — Rolling mean (window=7) overlaid on the original.
+            d) **Rolling Standard Deviation** — Rolling std (window=7) to assess volatility changes.
+        - **Column Selection Logic:**
+            - If `"High"` exists (case-insensitive), use it.
+            - Otherwise, pick the numeric column with highest variance.
+            - If no numeric column exists, raise an error.
+        - **Time Column Handling:**
+            - Detect date/time column by name (`date`, `time`, `year`, `month`) and convert with `pd.to_datetime()`.
+            - Sort by this column before plotting.
+        - **Aesthetics:**
+            - Add clear titles to each subplot (`Original + Forecast`, `First Difference`, `Moving Average`, `Rolling Std`).
+            - Rotate x-axis labels by 30°.
+            - Use `sns.set_theme(style="whitegrid")` if available.
+            - Limit y-axis in all plots to min/max of the chosen series ± 10% for clarity.
+        - **Output:**
+            - Always call `plt.tight_layout()`.
+            - Assign the final `matplotlib` Figure to `result`.
 
-    8. Wrap the entire code snippet inside a single markdown code block that begins with ```python and ends with ```. Do not include any explanation, comments, or output — only valid executable Python code.  
+    10. Wrap the entire code snippet inside a single markdown code block that begins with ```python and ends with ```. Do not include any explanation, comments, or output — only valid executable Python code.  
     """
 
 def CodeGenerationAgent(query: str, df: pd.DataFrame):
