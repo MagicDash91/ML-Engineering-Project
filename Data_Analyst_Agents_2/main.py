@@ -35,6 +35,11 @@ from datetime import datetime
 import os
 from PIL import Image
 
+# New imports for database functionality
+from langchain.utilities import SQLDatabase
+from langchain.agents.agent_toolkits import SQLDatabaseToolkit
+from langchain.agents import initialize_agent, AgentType
+
 import tempfile
 
 load_dotenv()
@@ -69,6 +74,10 @@ sessions = {}
 # Pydantic models
 class QueryRequest(BaseModel):
     session_id: str
+    query: str
+
+class DatabaseQueryRequest(BaseModel):
+    database_uri: str
     query: str
 
 class ChatResponse(BaseModel):
@@ -737,6 +746,39 @@ def save_plot_to_static(fig, session_id: str) -> str:
     
     return f"/static/{filename}"
 
+# === Database Chat Functions ===
+
+def DatabaseChatAgent(database_uri: str, query: str) -> str:
+    """Handle database queries using LangChain SQL agent."""
+    try:
+        # Initialize the LLM
+        llm = ChatGoogleGenerativeAI(
+            model="gemini-2.0-flash",
+            temperature=0.7,
+            google_api_key="AIzaSyAMAYxkjP49QZRCg21zImWWAu7c3YHJ0a8"
+        )
+        
+        # Create database connection
+        db = SQLDatabase.from_uri(database_uri)
+        
+        # Create SQL toolkit
+        toolkit = SQLDatabaseToolkit(db=db, llm=llm)
+        
+        # Initialize agent
+        agent_executor = initialize_agent(
+            tools=toolkit.get_tools(),
+            llm=llm,
+            agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+            verbose=True
+        )
+        
+        # Execute query
+        response = agent_executor.run(query)
+        return response
+        
+    except Exception as e:
+        return f"Error connecting to database or executing query: {str(e)}"
+
 # === API Routes ===
 
 @app.get("/", response_class=HTMLResponse)
@@ -782,6 +824,33 @@ async def get_index():
                 background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
                 color: white;
                 min-height: calc(100vh - 40px);
+            }
+            
+            .nav-tabs .nav-link {
+                background: rgba(255, 255, 255, 0.1);
+                color: rgba(255, 255, 255, 0.8);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                margin-right: 5px;
+                border-radius: 10px 10px 0 0;
+                transition: all 0.3s ease;
+            }
+            
+            .nav-tabs .nav-link:hover {
+                background: rgba(255, 255, 255, 0.2);
+                color: white;
+            }
+            
+            .nav-tabs .nav-link.active {
+                background: rgba(255, 255, 255, 0.9);
+                color: #2c3e50;
+                border-color: rgba(255, 255, 255, 0.3);
+            }
+            
+            .tab-content {
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 0 10px 10px 10px;
+                padding: 20px;
+                margin-top: -1px;
             }
             
             .chat-section {
@@ -940,6 +1009,34 @@ async def get_index():
                 left: 0;
             }
             
+            .database-input-group {
+                background: rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(5px);
+                border-radius: 10px;
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+            
+            .database-input-group label {
+                color: white;
+                font-weight: 500;
+                margin-bottom: 8px;
+                display: block;
+            }
+            
+            .database-input-group input, .database-input-group textarea {
+                background: rgba(255, 255, 255, 0.9);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                border-radius: 8px;
+                color: #333;
+            }
+            
+            .database-input-group input:focus, .database-input-group textarea:focus {
+                background: white;
+                border-color: #38ef7d;
+                box-shadow: 0 0 0 0.2rem rgba(56, 239, 125, 0.25);
+            }
+            
             .btn-primary {
                 background: var(--primary-gradient);
                 border: none;
@@ -1049,27 +1146,69 @@ async def get_index():
                         <h3 class="brand-title"><i class="fas fa-chart-line"></i> Data Analysis Agent</h3>
                         <p class="small mb-4">Powered by <a href="https://build.nvidia.com/nvidia/llama-3_1-nemotron-ultra-253b-v1" target="_blank" class="nvidia-link">NVIDIA Llama-3.1-Nemotron-Ultra-253B-v1</a></p>
                         
-                        <!-- File Upload -->
-                        <div class="mb-4">
-                            <div class="upload-area" id="uploadArea">
-                                <i class="fas fa-cloud-upload-alt fa-3x mb-3" style="color: #667eea;"></i>
-                                <h5>Upload Your Dataset</h5>
-                                <p class="mb-0">Click or drag CSV file here</p>
-                                <input type="file" id="csvFile" accept=".csv" style="display: none;">
+                        <!-- Tabs Navigation -->
+                        <ul class="nav nav-tabs mb-3" id="mainTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="csv-tab" data-bs-toggle="tab" data-bs-target="#csv-panel" type="button" role="tab">
+                                    <i class="fas fa-file-csv"></i> CSV Data
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="database-tab" data-bs-toggle="tab" data-bs-target="#database-panel" type="button" role="tab">
+                                    <i class="fas fa-database"></i> Database
+                                </button>
+                            </li>
+                        </ul>
+                        
+                        <!-- Tab Content -->
+                        <div class="tab-content" id="mainTabContent">
+                            <!-- CSV Upload Tab -->
+                            <div class="tab-pane fade show active" id="csv-panel" role="tabpanel">
+                                <!-- File Upload -->
+                                <div class="mb-4">
+                                    <div class="upload-area" id="uploadArea">
+                                        <i class="fas fa-cloud-upload-alt fa-3x mb-3" style="color: #667eea;"></i>
+                                        <h5>Upload Your Dataset</h5>
+                                        <p class="mb-0">Click or drag CSV file here</p>
+                                        <input type="file" id="csvFile" accept=".csv" style="display: none;">
+                                    </div>
+                                </div>
+                                
+                                <!-- Dataset Info -->
+                                <div id="datasetInfo" style="display: none;">
+                                    <h5 class="mb-3"><i class="fas fa-table"></i> Dataset Preview</h5>
+                                    <div id="datasetPreview" class="dataset-preview border rounded mb-3"></div>
+                                    <div id="datasetInsights" class="insights-container"></div>
+                                </div>
+                                
+                                <div id="uploadPrompt" class="alert alert-warning">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Get Started!</strong><br>
+                                    Upload a CSV file to begin analyzing your data with AI.
+                                </div>
                             </div>
-                        </div>
-                        
-                        <!-- Dataset Info -->
-                        <div id="datasetInfo" style="display: none;">
-                            <h5 class="mb-3"><i class="fas fa-table"></i> Dataset Preview</h5>
-                            <div id="datasetPreview" class="dataset-preview border rounded mb-3"></div>
-                            <div id="datasetInsights" class="insights-container"></div>
-                        </div>
-                        
-                        <div id="uploadPrompt" class="alert alert-warning">
-                            <i class="fas fa-info-circle me-2"></i>
-                            <strong>Get Started!</strong><br>
-                            Upload a CSV file to begin analyzing your data with AI.
+                            
+                            <!-- Database Chat Tab -->
+                            <div class="tab-pane fade" id="database-panel" role="tabpanel">
+                                <div class="database-input-group">
+                                    <label for="databaseUri">
+                                        <i class="fas fa-database me-2"></i>Database URI
+                                    </label>
+                                    <input type="text" id="databaseUri" class="form-control mb-3" 
+                                           placeholder="e.g., sqlite:///database.db or postgresql://user:pass@host:port/db">
+                                    <small class="text-light">
+                                        Supported: SQLite, PostgreSQL, MySQL, SQL Server
+                                    </small>
+                                </div>
+                                
+                                <div class="alert alert-info" style="background: rgba(56, 239, 125, 0.2); border: 1px solid rgba(56, 239, 125, 0.3); color: white;">
+                                    <i class="fas fa-lightbulb me-2"></i>
+                                    <strong>Examples:</strong><br>
+                                    • <code>sqlite:///Chinook_Sqlite.sqlite</code><br>
+                                    • <code>postgresql://user:pass@localhost:5432/mydb</code><br>
+                                    • <code>mysql://user:pass@localhost:3306/mydb</code>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1078,7 +1217,10 @@ async def get_index():
                 <div class="col-lg-8 chat-section">
                     <div class="p-4 h-100 d-flex flex-column">
                         <div class="d-flex align-items-center mb-4">
-                            <h3 class="mb-0"><i class="fas fa-comments text-primary"></i> Chat with your data</h3>
+                            <h3 class="mb-0">
+                                <i class="fas fa-comments text-primary"></i> 
+                                <span id="chatTitle">Chat with your data</span>
+                            </h3>
                             <div class="ms-auto">
                                 <button id="clearChat" class="btn btn-outline-secondary btn-sm" style="display: none;">
                                     <i class="fas fa-trash"></i> Clear Chat
@@ -1089,10 +1231,10 @@ async def get_index():
                         <!-- Chat Container -->
                         <div id="chatContainer" class="chat-container">
                             <div id="messages">
-                                <div class="empty-chat">
+                                <div class="empty-chat" id="emptyChatMessage">
                                     <i class="fas fa-robot"></i>
                                     <h5>Ready to analyze your data!</h5>
-                                    <p>Upload a CSV file to start asking questions about your data.</p>
+                                    <p>Upload a CSV file or connect to a database to start asking questions.</p>
                                 </div>
                             </div>
                         </div>
@@ -1121,11 +1263,60 @@ async def get_index():
         <script>
             let sessionId = null;
             let messageCount = 0;
+            let currentMode = 'csv'; // 'csv' or 'database'
             
             // Generate session ID
             function generateSessionId() {
                 return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
             }
+            
+            // Tab switching functionality
+            document.addEventListener('DOMContentLoaded', function() {
+                const tabs = document.querySelectorAll('#mainTabs button[data-bs-toggle="tab"]');
+                tabs.forEach(tab => {
+                    tab.addEventListener('shown.bs.tab', function(e) {
+                        const targetId = e.target.getAttribute('data-bs-target');
+                        if (targetId === '#csv-panel') {
+                            currentMode = 'csv';
+                            document.getElementById('chatTitle').textContent = 'Chat with your data';
+                            updateChatState();
+                        } else if (targetId === '#database-panel') {
+                            currentMode = 'database';
+                            document.getElementById('chatTitle').textContent = 'Chat with your database';
+                            updateChatState();
+                        }
+                    });
+                });
+            });
+            
+            // Update chat input state based on current mode
+            function updateChatState() {
+                const chatInput = document.getElementById('chatInput');
+                const sendButton = document.getElementById('sendButton');
+                
+                if (currentMode === 'csv') {
+                    const hasSession = sessionId && sessions && sessions[sessionId];
+                    chatInput.disabled = !hasSession;
+                    sendButton.disabled = !hasSession;
+                    chatInput.placeholder = hasSession ? 
+                        "Ask me anything about your data..." : 
+                        "Upload a CSV file first...";
+                } else if (currentMode === 'database') {
+                    const hasUri = document.getElementById('databaseUri').value.trim();
+                    chatInput.disabled = !hasUri;
+                    sendButton.disabled = !hasUri;
+                    chatInput.placeholder = hasUri ? 
+                        "Ask me anything about your database..." : 
+                        "Enter database URI first...";
+                }
+            }
+            
+            // Database URI input handler
+            document.getElementById('databaseUri').addEventListener('input', function() {
+                if (currentMode === 'database') {
+                    updateChatState();
+                }
+            });
             
             // Initialize drag and drop
             function initializeDragDrop() {
@@ -1185,7 +1376,7 @@ async def get_index():
                     
                     if (response.ok) {
                         displayDatasetInfo(result);
-                        enableChat();
+                        updateChatState();
                         clearMessages();
                         showSuccessMessage(`Successfully loaded ${file.name} with ${result.rows} rows and ${result.columns.length} columns.`);
                     } else {
@@ -1237,22 +1428,16 @@ async def get_index():
                 document.getElementById('datasetInsights').innerHTML = insightsHtml;
             }
             
-            // Enable chat interface
-            function enableChat() {
-                document.getElementById('chatInput').disabled = false;
-                document.getElementById('sendButton').disabled = false;
-                document.getElementById('clearChat').style.display = 'inline-block';
-                document.getElementById('chatInput').focus();
-            }
-            
             // Clear messages
             function clearMessages() {
                 document.getElementById('messages').innerHTML = '';
+                document.getElementById('emptyChatMessage').style.display = 'block';
                 messageCount = 0;
             }
             
             // Show success message
             function showSuccessMessage(message) {
+                document.getElementById('emptyChatMessage').style.display = 'none';
                 addMessage('system', `✅ ${message}`, null, null, null, 'success');
             }
             
@@ -1267,26 +1452,44 @@ async def get_index():
                 const query = input.value.trim();
                 if (!query) return;
                 
-                if (!sessionId) {
-                    showErrorMessage('Please upload a CSV file first.');
-                    return;
+                let endpoint, requestBody;
+                
+                if (currentMode === 'csv') {
+                    if (!sessionId) {
+                        showErrorMessage('Please upload a CSV file first.');
+                        return;
+                    }
+                    endpoint = '/chat';
+                    requestBody = {
+                        session_id: sessionId,
+                        query: query
+                    };
+                } else if (currentMode === 'database') {
+                    const databaseUri = document.getElementById('databaseUri').value.trim();
+                    if (!databaseUri) {
+                        showErrorMessage('Please enter a database URI first.');
+                        return;
+                    }
+                    endpoint = '/database-chat';
+                    requestBody = {
+                        database_uri: databaseUri,
+                        query: query
+                    };
                 }
                 
                 // Add user message
+                document.getElementById('emptyChatMessage').style.display = 'none';
                 addMessage('user', query);
                 input.value = '';
                 
                 try {
                     showLoading();
-                    const response = await fetch('/chat', {
+                    const response = await fetch(endpoint, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify({
-                            session_id: sessionId,
-                            query: query
-                        })
+                        body: JSON.stringify(requestBody)
                     });
                     
                     const result = await response.json();
@@ -1406,8 +1609,7 @@ async def get_index():
             // Hide loading
             function hideLoading() {
                 document.getElementById('loading').style.display = 'none';
-                document.getElementById('sendButton').disabled = false;
-                document.getElementById('chatInput').disabled = false;
+                updateChatState(); // Re-enable based on current mode
                 document.getElementById('chatInput').focus();
             }
             
@@ -1430,36 +1632,7 @@ async def get_index():
             
             // Initialize
             initializeDragDrop();
-            
-            // Add some example queries when dataset is loaded
-            function addExampleQueries() {
-                const examples = [
-                    "Show me a summary of the data",
-                    "Create a visualization of the main trends",
-                    "What are the key statistics?",
-                    "Plot a correlation matrix"
-                ];
-                
-                const exampleHtml = examples.map(query => 
-                    `<button class="btn btn-outline-primary btn-sm me-2 mb-2 example-query" data-query="${query}">${query}</button>`
-                ).join('');
-                
-                addMessage('system', `
-                    <div class="mt-2">
-                        <strong>💡 Try these example queries:</strong><br>
-                        <div class="mt-2">${exampleHtml}</div>
-                    </div>
-                `, null, null, null, 'info');
-                
-                // Add click handlers for example queries
-                document.querySelectorAll('.example-query').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const query = this.getAttribute('data-query');
-                        document.getElementById('chatInput').value = query;
-                        sendMessage();
-                    });
-                });
-            }
+            updateChatState();
         </script>
     </body>
     </html>
@@ -1507,6 +1680,29 @@ async def upload_file(file: UploadFile = File(...), session_id: str = Form(...))
         raise HTTPException(status_code=400, detail="The CSV file appears to be empty or invalid.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
+
+@app.post("/database-chat", response_model=ChatResponse)
+async def database_chat(request: DatabaseQueryRequest):
+    """Handle database chat queries and return responses."""
+    try:
+        # Process the database query using the DatabaseChatAgent
+        response = DatabaseChatAgent(request.database_uri, request.query)
+        
+        return ChatResponse(
+            response=response,
+            plot_url=None,
+            thinking="Processed query using SQL Database Agent with Gemini LLM.",
+            code=None
+        )
+        
+    except Exception as e:
+        error_msg = f"Database query failed: {str(e)}"
+        return ChatResponse(
+            response=error_msg,
+            plot_url=None,
+            thinking=f"Error occurred while processing database query: {str(e)}",
+            code=None
+        )
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: QueryRequest):
