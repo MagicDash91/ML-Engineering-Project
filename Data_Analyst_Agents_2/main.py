@@ -24,7 +24,10 @@ from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain.chains import StuffDocumentsChain
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.document_loaders import UnstructuredFileLoader
+try:
+    from langchain_unstructured import UnstructuredLoader as UnstructuredFileLoader
+except ImportError:
+    from langchain_community.document_loaders import UnstructuredFileLoader
 from langchain_core.output_parsers import StrOutputParser
 import google.generativeai as genai
 import google.generativeai.types as gtypes
@@ -39,6 +42,15 @@ from PIL import Image
 from langchain.utilities import SQLDatabase
 from langchain.agents.agent_toolkits import SQLDatabaseToolkit
 from langchain.agents import initialize_agent, AgentType
+
+# New imports for Research (Agentic AI) functionality
+from langchain.tools import WikipediaQueryRun, ArxivQueryRun, Tool
+from langchain.utilities import WikipediaAPIWrapper, ArxivAPIWrapper
+from langchain_community.tools.tavily_search import TavilySearchResults
+from langgraph.graph import StateGraph, END
+from typing import TypedDict, List, Optional
+import json
+import uuid
 
 import tempfile
 
@@ -79,6 +91,26 @@ class QueryRequest(BaseModel):
 class DatabaseQueryRequest(BaseModel):
     database_uri: str
     query: str
+
+class ResearchQueryRequest(BaseModel):
+    session_id: str
+    query: str
+
+class ResearchState(TypedDict):
+    question: str
+    original_question: str
+    docs: Optional[List[str]]
+    external_docs: Optional[List[str]]
+    answer: Optional[str]
+    relevant: Optional[bool]
+    answered: Optional[bool]
+    selected_tools: Optional[List[str]]
+    search_strategy: Optional[str]
+    iteration_count: Optional[int]
+    reasoning: Optional[str]
+    visualization_needed: Optional[bool]
+    chart_data: Optional[str]
+    plot_url: Optional[str]
 
 class ChatResponse(BaseModel):
     response: str
@@ -779,6 +811,499 @@ def DatabaseChatAgent(database_uri: str, query: str) -> str:
     except Exception as e:
         return f"Error connecting to database or executing query: {str(e)}"
 
+# === Research (Agentic AI) Functions ===
+
+# Initialize research tools
+def initialize_research_tools():
+    """Initialize external research tools"""
+    try:
+        # Setup tools
+        wikipedia_tool = WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper())
+        arxiv_tool = ArxivQueryRun(api_wrapper=ArxivAPIWrapper())
+        
+        # Note: You may need to set up Tavily API key
+        tavily_api_key = os.getenv("TAVILY_API_KEY", "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")
+        tavily_tool_instance = TavilySearchResults(k=3, tavily_api_key=tavily_api_key)
+        
+        tools = {
+            "Wikipedia": Tool(
+                name="Wikipedia",
+                func=wikipedia_tool.run,
+                description="Use for general concepts and historical information"
+            ),
+            "arXiv": Tool(
+                name="arXiv",
+                func=arxiv_tool.run,
+                description="Use for academic research and scientific studies"
+            ),
+            "TavilySearch": Tool(
+                name="TavilySearch",
+                func=tavily_tool_instance.run,
+                description="Use for current information, news, and web search"
+            ),
+        }
+        return tools
+    except Exception as e:
+        print(f"Warning: Could not initialize some research tools: {e}")
+        return {}
+
+# Research workflow nodes
+def tool_selection_node(state: ResearchState) -> ResearchState:
+    """Agent decides which tools to use based on question analysis"""
+    question = state["question"]
+    
+    prompt = f"""
+    You are an intelligent research agent that selects the best tools for answering questions.
+    
+    Question: {question}
+    
+    Available tools:
+    1. Wikipedia - For general concepts and historical information
+    2. arXiv - For academic research and scientific studies  
+    3. TavilySearch - For current information, news, and web search
+    4. DocumentAnalysis - For specific document content (already loaded)
+    
+    Analysis:
+    - Is this about current events or news? -> Use TavilySearch
+    - Is this about academic/scientific research? -> Use arXiv
+    - Is this about general concepts? -> Use Wikipedia
+    - Is this about specific documents? -> Use DocumentAnalysis
+    
+    Also determine if visualization would be helpful for this question.
+    
+    Select 1-3 tools that would be most helpful. Return as comma-separated list.
+    
+    Format:
+    TOOLS: tool1,tool2,tool3
+    VISUALIZATION: yes/no
+    REASONING: why these tools were selected
+    """
+    
+    try:
+        llm = ChatGoogleGenerativeAI(
+            model="gemini-2.0-flash",
+            temperature=0.2,
+            google_api_key="AIzaSyAMAYxkjP49QZRCg21zImWWAu7c3YHJ0a8"
+        )
+        result = llm.invoke(prompt)
+        content = result.content.strip()
+        
+        # Parse response
+        lines = content.split('\n')
+        selected_tools = []
+        reasoning = ""
+        visualization_needed = False
+        
+        for line in lines:
+            if line.startswith('TOOLS:'):
+                selected_tools = [tool.strip() for tool in line.replace('TOOLS:', '').split(',')]
+            elif line.startswith('VISUALIZATION:'):
+                visualization_needed = 'yes' in line.lower()
+            elif line.startswith('REASONING:'):
+                reasoning = line.replace('REASONING:', '').strip()
+        
+        return {
+            **state,
+            "selected_tools": selected_tools,
+            "reasoning": reasoning,
+            "visualization_needed": visualization_needed,
+            "search_strategy": "multi_tool_search"
+        }
+    except Exception as e:
+        return {
+            **state,
+            "selected_tools": ["DocumentAnalysis"],
+            "reasoning": f"Error in tool selection: {e}",
+            "visualization_needed": False,
+            "search_strategy": "document_only"
+        }
+
+def multi_source_retrieve_node(state: ResearchState) -> ResearchState:
+    """Retrieve from multiple sources based on selected tools"""
+    question = state["question"]
+    selected_tools = state.get("selected_tools", [])
+    
+    # Internal document retrieval (from uploaded documents)
+    internal_docs = state.get("docs", [])
+    if not internal_docs:
+        internal_docs = [f"Document content related to: {question}"]
+    
+    # External tool retrieval
+    external_docs = []
+    tools = initialize_research_tools()
+    
+    for tool_name in selected_tools:
+        if tool_name in tools:
+            try:
+                tool_result = tools[tool_name].run(question)
+                external_docs.append(f"{tool_name}: {tool_result}")
+            except Exception as e:
+                external_docs.append(f"{tool_name}: Error - {str(e)}")
+    
+    return {
+        **state,
+        "docs": internal_docs,
+        "external_docs": external_docs
+    }
+
+def enhanced_grade_node(state: ResearchState) -> ResearchState:
+    """Grade relevance of documents from multiple sources"""
+    question = state["question"]
+    docs = state.get("docs", [])
+    external_docs = state.get("external_docs", [])
+    
+    all_docs = docs + external_docs
+    
+    # Make grading more lenient to avoid infinite loops
+    iteration_count = state.get("iteration_count", 0)
+    
+    # If we've already tried once, be more lenient
+    if iteration_count >= 1 or not all_docs:
+        return {**state, "relevant": True}
+    
+    prompt = f"""
+    Evaluate the relevance of retrieved documents:
+    
+    Question: {question}
+    
+    Documents:
+    {all_docs}
+    
+    Are these documents sufficient to provide at least a basic answer to the question?
+    Be lenient - even partial information should be considered sufficient.
+    
+    Reply 'yes' if ANY useful information is available, 'no' only if completely irrelevant.
+    """
+    
+    try:
+        llm = ChatGoogleGenerativeAI(
+            model="gemini-2.0-flash",
+            temperature=0.1,
+            google_api_key="AIzaSyAMAYxkjP49QZRCg21zImWWAu7c3YHJ0a8"
+        )
+        result = llm.invoke(prompt)
+        is_relevant = "yes" in result.content.lower()
+        
+        return {**state, "relevant": is_relevant}
+    except Exception as e:
+        return {**state, "relevant": True}  # Default to relevant to avoid infinite loops
+
+def enhanced_generation_node(state: ResearchState) -> ResearchState:
+    """Generate answer using multiple sources"""
+    question = state["question"]
+    docs = state.get("docs", [])
+    external_docs = state.get("external_docs", [])
+    selected_tools = state.get("selected_tools", [])
+    visualization_needed = state.get("visualization_needed", False)
+    
+    all_docs = docs + external_docs
+    context = "\n".join(all_docs)
+    
+    # Generate chart if visualization is needed
+    plot_url = None
+    chart_data = None
+    
+    if visualization_needed:
+        try:
+            # Generate visualization based on the data and question
+            fig, chart_data = generate_research_visualization(question, context)
+            if fig:
+                plot_id = str(uuid.uuid4())
+                filename = f"research_plot_{plot_id}.png"
+                filepath = os.path.join("static", filename)
+                fig.savefig(filepath, dpi=100, bbox_inches='tight')
+                plt.close(fig)
+                plot_url = f"/static/{filename}"
+        except Exception as e:
+            chart_data = f"Visualization error: {e}"
+    
+    prompt = f"""
+    You are an expert research assistant. Synthesize information from multiple sources to provide a comprehensive answer.
+    
+    Question: {question}
+    
+    Sources used: {', '.join(selected_tools)}
+    
+    Context from multiple sources:
+    {context}
+    
+    Instructions:
+    1. Provide a clear, comprehensive answer
+    2. Mention which sources contributed key information
+    3. If sources conflict, note the differences
+    4. Ensure accuracy and completeness
+    5. Structure the response with clear sections
+    
+    Answer:
+    """
+    
+    try:
+        llm = ChatGoogleGenerativeAI(
+            model="gemini-2.0-flash",
+            temperature=0.3,
+            google_api_key="AIzaSyAMAYxkjP49QZRCg21zImWWAu7c3YHJ0a8"
+        )
+        response = llm.invoke(prompt)
+        return {
+            **state, 
+            "answer": response.content.strip(),
+            "plot_url": plot_url,
+            "chart_data": chart_data
+        }
+    except Exception as e:
+        return {
+            **state, 
+            "answer": f"Error generating response: {e}",
+            "plot_url": plot_url,
+            "chart_data": chart_data
+        }
+
+def answer_check_node(state: ResearchState) -> ResearchState:
+    """Check if answer is sufficient"""
+    question = state["question"]
+    answer = state.get("answer", "")
+    iteration_count = state.get("iteration_count", 0)
+    
+    # Be more lenient if we've tried once already or if we have any answer
+    if iteration_count >= 1 or (answer and len(answer.strip()) > 50):
+        return {**state, "answered": True}
+    
+    prompt = f"Does this answer provide at least some useful information about the question?\nQuestion: {question}\nAnswer: {answer}\nReply yes if it provides ANY relevant information, no only if completely useless."
+    
+    try:
+        llm = ChatGoogleGenerativeAI(
+            model="gemini-2.0-flash",
+            temperature=0.1,
+            google_api_key="AIzaSyAMAYxkjP49QZRCg21zImWWAu7c3YHJ0a8"
+        )
+        result = llm.invoke(prompt)
+        answered = "yes" in result.content.lower()
+        return {**state, "answered": answered}
+    except Exception as e:
+        return {**state, "answered": True}  # Default to answered to avoid infinite loops
+
+def strategy_adaptation_node(state: ResearchState) -> ResearchState:
+    """Adapt search strategy if answer is insufficient"""
+    question = state["question"]
+    current_tools = state.get("selected_tools", [])
+    iteration_count = state.get("iteration_count", 0)
+    
+    # Limit iterations to prevent infinite loops - be more aggressive
+    if iteration_count >= 1:  # Reduced from 2 to 1
+        # Force completion with existing answer or a basic response
+        existing_answer = state.get("answer", "")
+        if not existing_answer or len(existing_answer.strip()) < 10:
+            existing_answer = "Based on the uploaded documents, I was unable to provide a complete analysis after multiple attempts. The documents may not contain sufficient information to fully answer your question."
+        
+        return {
+            **state,
+            "answered": True,  # Force completion
+            "relevant": True,  # Force relevance
+            "answer": existing_answer
+        }
+    
+    prompt = f"""
+    The current answer was insufficient. Adapt the search strategy:
+    
+    Original question: {question}
+    Previously used tools: {current_tools}
+    Iteration: {iteration_count}
+    
+    Suggest:
+    1. Different tools to try
+    2. Modified search query
+    3. Alternative approach
+    
+    Format:
+    NEW_TOOLS: tool1,tool2
+    NEW_QUERY: modified query
+    """
+    
+    try:
+        llm = ChatGoogleGenerativeAI(
+            model="gemini-2.0-flash",
+            temperature=0.4,
+            google_api_key="AIzaSyAMAYxkjP49QZRCg21zImWWAu7c3YHJ0a8"
+        )
+        result = llm.invoke(prompt)
+        content = result.content.strip()
+        
+        # Parse adaptation
+        new_tools = current_tools  # default
+        new_query = question       # default
+        
+        for line in content.split('\n'):
+            if line.startswith('NEW_TOOLS:'):
+                new_tools = [tool.strip() for tool in line.replace('NEW_TOOLS:', '').split(',')]
+            elif line.startswith('NEW_QUERY:'):
+                new_query = line.replace('NEW_QUERY:', '').strip()
+        
+        return {
+            **state,
+            "selected_tools": new_tools,
+            "question": new_query,
+            "iteration_count": iteration_count + 1
+        }
+    except Exception as e:
+        return {
+            **state,
+            "answered": True,  # Force completion on error
+            "iteration_count": iteration_count + 1
+        }
+
+def generate_research_visualization(question: str, context: str):
+    """Generate visualization if appropriate for the research question"""
+    try:
+        # Simple heuristic-based visualization
+        # In a more advanced implementation, you could use LLM to determine
+        # the best visualization type and extract data from context
+        
+        import matplotlib.pyplot as plt
+        import numpy as np
+        
+        # Example: Create a simple word frequency chart from the context
+        words = context.lower().split()
+        word_freq = {}
+        
+        # Count word frequencies (filter common words)
+        stop_words = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should'}
+        
+        for word in words:
+            if len(word) > 3 and word not in stop_words:
+                word_freq[word] = word_freq.get(word, 0) + 1
+        
+        # Get top 10 words
+        top_words = sorted(word_freq.items(), key=lambda x: x[1], reverse=True)[:10]
+        
+        if top_words:
+            fig, ax = plt.subplots(figsize=(10, 6))
+            words, freqs = zip(*top_words)
+            ax.bar(words, freqs, color='skyblue', alpha=0.7)
+            ax.set_title(f'Key Terms in Research Context\nQuestion: {question[:50]}...')
+            ax.set_xlabel('Terms')
+            ax.set_ylabel('Frequency')
+            plt.xticks(rotation=45, ha='right')
+            plt.tight_layout()
+            
+            chart_data = json.dumps(dict(top_words))
+            return fig, chart_data
+    
+    except Exception as e:
+        print(f"Visualization error: {e}")
+    
+    return None, None
+
+# Build research workflow
+def build_research_workflow():
+    """Build the agentic research workflow using LangGraph"""
+    workflow = StateGraph(ResearchState)
+    
+    # Add nodes
+    workflow.add_node("ToolSelection", tool_selection_node)
+    workflow.add_node("MultiRetrieve", multi_source_retrieve_node)
+    workflow.add_node("Grade", enhanced_grade_node)
+    workflow.add_node("Generate", enhanced_generation_node)
+    workflow.add_node("Evaluate", answer_check_node)
+    workflow.add_node("Adapt", strategy_adaptation_node)
+    
+    # Set entry point
+    workflow.set_entry_point("ToolSelection")
+    
+    # Define workflow edges
+    workflow.add_edge("ToolSelection", "MultiRetrieve")
+    workflow.add_edge("MultiRetrieve", "Grade")
+    
+    workflow.add_conditional_edges(
+        "Grade",
+        lambda state: "Yes" if state["relevant"] else "No",
+        {
+            "Yes": "Generate",
+            "No": "Adapt"
+        }
+    )
+    
+    workflow.add_edge("Generate", "Evaluate")
+    
+    workflow.add_conditional_edges(
+        "Evaluate",
+        lambda state: "Yes" if state["answered"] else "No",
+        {
+            "Yes": END,
+            "No": "Adapt"
+        }
+    )
+    
+    workflow.add_edge("Adapt", "MultiRetrieve")
+    
+    # Compile workflow
+    return workflow.compile()
+
+def process_research_query(session_id: str, query: str) -> ChatResponse:
+    """Process research query using agentic workflow"""
+    try:
+        # Get session data
+        if session_id not in sessions:
+            raise HTTPException(status_code=400, detail="Session not found. Please upload documents first.")
+        
+        session = sessions[session_id]
+        uploaded_docs = session.get('research_docs', [])
+        
+        if not uploaded_docs:
+            raise HTTPException(status_code=400, detail="No documents found in session. Please upload documents first.")
+        
+        # Build workflow
+        workflow = build_research_workflow()
+        
+        # Prepare initial state
+        initial_state = {
+            "question": query,
+            "original_question": query,
+            "docs": uploaded_docs,
+            "external_docs": None,
+            "answer": None,
+            "relevant": None,
+            "answered": None,
+            "selected_tools": None,
+            "search_strategy": None,
+            "iteration_count": 0,
+            "reasoning": None,
+            "visualization_needed": None,
+            "chart_data": None,
+            "plot_url": None
+        }
+        
+        # Execute workflow with increased recursion limit
+        result = workflow.invoke(initial_state, config={"recursion_limit": 50})
+        
+        # Store in session history
+        if 'research_messages' not in session:
+            session['research_messages'] = []
+        
+        session['research_messages'].append({
+            'query': query,
+            'response': result.get("answer", "No answer generated"),
+            'plot_url': result.get("plot_url"),
+            'reasoning': result.get("reasoning", ""),
+            'selected_tools': result.get("selected_tools", []),
+            'timestamp': pd.Timestamp.now().isoformat()
+        })
+        
+        return ChatResponse(
+            response=result.get("answer", "No answer generated"),
+            plot_url=result.get("plot_url"),
+            thinking=f"Research workflow completed. Tools used: {', '.join(result.get('selected_tools', []))}. Reasoning: {result.get('reasoning', '')}",
+            code=None
+        )
+        
+    except Exception as e:
+        error_msg = f"Research query failed: {str(e)}"
+        return ChatResponse(
+            response=error_msg,
+            plot_url=None,
+            thinking=f"Error occurred during research workflow: {str(e)}",
+            code=None
+        )
+
 # === API Routes ===
 
 @app.get("/", response_class=HTMLResponse)
@@ -1158,6 +1683,11 @@ async def get_index():
                                     <i class="fas fa-database"></i> Database
                                 </button>
                             </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="research-tab" data-bs-toggle="tab" data-bs-target="#research-panel" type="button" role="tab">
+                                    <i class="fas fa-search"></i> Research
+                                </button>
+                            </li>
                         </ul>
                         
                         <!-- Tab Content -->
@@ -1207,6 +1737,65 @@ async def get_index():
                                     • <code>sqlite:///Chinook_Sqlite.sqlite</code><br>
                                     • <code>postgresql://user:pass@localhost:5432/mydb</code><br>
                                     • <code>mysql://user:pass@localhost:3306/mydb</code>
+                                </div>
+                            </div>
+                            
+                            <!-- Research Tab -->
+                            <div class="tab-pane fade" id="research-panel" role="tabpanel">
+                                <!-- Multiple File Upload -->
+                                <div class="mb-4">
+                                    <div class="upload-area" id="researchUploadArea">
+                                        <i class="fas fa-file-upload fa-3x mb-3" style="color: #667eea;"></i>
+                                        <h5>Upload Research Documents</h5>
+                                        <p class="mb-0">Click or drag multiple files here</p>
+                                        <p class="small text-muted">Supports: PDF, TXT, DOCX, XLSX, PPTX</p>
+                                        <input type="file" id="researchFiles" multiple accept=".pdf,.txt,.docx,.xlsx,.pptx" style="display: none;">
+                                    </div>
+                                </div>
+                                
+                                <!-- Uploaded Files List -->
+                                <div id="uploadedFilesList" style="display: none;">
+                                    <h6 class="mb-3"><i class="fas fa-files"></i> Uploaded Files</h6>
+                                    <div id="filesContainer" class="mb-3"></div>
+                                </div>
+                                
+                                <!-- Research Tools Configuration -->
+                                <div class="database-input-group">
+                                    <label>
+                                        <i class="fas fa-tools me-2"></i>Research Tools
+                                    </label>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="enableWikipedia" checked>
+                                                <label class="form-check-label text-light" for="enableWikipedia">
+                                                    Wikipedia
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="enableArxiv" checked>
+                                                <label class="form-check-label text-light" for="enableArxiv">
+                                                    ArXiv
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="enableTavily" checked>
+                                                <label class="form-check-label text-light" for="enableTavily">
+                                                    Web Search
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="alert alert-info" style="background: rgba(56, 239, 125, 0.2); border: 1px solid rgba(56, 239, 125, 0.3); color: white;">
+                                    <i class="fas fa-robot me-2"></i>
+                                    <strong>Agentic AI Research:</strong><br>
+                                    Upload documents and ask research questions. The AI will intelligently select tools, search multiple sources, and provide comprehensive answers with visualizations when needed.
                                 </div>
                             </div>
                         </div>
@@ -1263,7 +1852,9 @@ async def get_index():
         <script>
             let sessionId = null;
             let messageCount = 0;
-            let currentMode = 'csv'; // 'csv' or 'database'
+            let currentMode = 'csv'; // 'csv', 'database', or 'research'
+            let researchSessionId = null;
+            let uploadedFiles = [];
             
             // Generate session ID
             function generateSessionId() {
@@ -1284,6 +1875,10 @@ async def get_index():
                             currentMode = 'database';
                             document.getElementById('chatTitle').textContent = 'Chat with your database';
                             updateChatState();
+                        } else if (targetId === '#research-panel') {
+                            currentMode = 'research';
+                            document.getElementById('chatTitle').textContent = 'Agentic AI Research';
+                            updateChatState();
                         }
                     });
                 });
@@ -1294,29 +1889,197 @@ async def get_index():
                 const chatInput = document.getElementById('chatInput');
                 const sendButton = document.getElementById('sendButton');
                 
+                // Check if elements exist before trying to access them
+                if (!chatInput || !sendButton) {
+                    console.warn('Chat input elements not found');
+                    return;
+                }
+                
                 if (currentMode === 'csv') {
-                    const hasSession = sessionId && sessions && sessions[sessionId];
+                    const hasSession = sessionId !== null;
                     chatInput.disabled = !hasSession;
                     sendButton.disabled = !hasSession;
                     chatInput.placeholder = hasSession ? 
                         "Ask me anything about your data..." : 
                         "Upload a CSV file first...";
                 } else if (currentMode === 'database') {
-                    const hasUri = document.getElementById('databaseUri').value.trim();
+                    const databaseUriElement = document.getElementById('databaseUri');
+                    const hasUri = databaseUriElement ? databaseUriElement.value.trim() : false;
                     chatInput.disabled = !hasUri;
                     sendButton.disabled = !hasUri;
                     chatInput.placeholder = hasUri ? 
                         "Ask me anything about your database..." : 
                         "Enter database URI first...";
+                } else if (currentMode === 'research') {
+                    const hasFiles = uploadedFiles.length > 0;
+                    chatInput.disabled = !hasFiles;
+                    sendButton.disabled = !hasFiles;
+                    chatInput.placeholder = hasFiles ? 
+                        "Ask research questions about your documents..." : 
+                        "Upload documents first...";
                 }
             }
             
             // Database URI input handler
-            document.getElementById('databaseUri').addEventListener('input', function() {
-                if (currentMode === 'database') {
-                    updateChatState();
+            const databaseUriInput = document.getElementById('databaseUri');
+            if (databaseUriInput) {
+                databaseUriInput.addEventListener('input', function() {
+                    if (currentMode === 'database') {
+                        updateChatState();
+                    }
+                });
+            }
+            
+            // Initialize research file upload
+            function initializeResearchUpload() {
+                const uploadArea = document.getElementById('researchUploadArea');
+                const fileInput = document.getElementById('researchFiles');
+                
+                // Check if elements exist before adding event listeners
+                if (!uploadArea || !fileInput) {
+                    console.warn('Research upload elements not found');
+                    return;
                 }
-            });
+                
+                uploadArea.addEventListener('click', () => fileInput.click());
+                
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    uploadArea.addEventListener(eventName, preventDefaults, false);
+                });
+                
+                function preventDefaults(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    uploadArea.addEventListener(eventName, () => uploadArea.classList.add('dragover'), false);
+                });
+                
+                ['dragleave', 'drop'].forEach(eventName => {
+                    uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('dragover'), false);
+                });
+                
+                uploadArea.addEventListener('drop', handleResearchDrop, false);
+                
+                function handleResearchDrop(e) {
+                    const dt = e.dataTransfer;
+                    const files = dt.files;
+                    if (files.length > 0) {
+                        handleResearchFiles(Array.from(files));
+                    }
+                }
+            }
+            
+            // Handle research file upload
+            async function handleResearchFiles(files) {
+                if (!researchSessionId) {
+                    researchSessionId = generateSessionId();
+                }
+                
+                const validExtensions = ['.pdf', '.txt', '.docx', '.xlsx', '.pptx'];
+                const validFiles = files.filter(file => {
+                    const ext = '.' + file.name.split('.').pop().toLowerCase();
+                    return validExtensions.includes(ext);
+                });
+                
+                if (validFiles.length === 0) {
+                    showErrorMessage('Please upload valid documents (PDF, TXT, DOCX, XLSX, PPTX)');
+                    return;
+                }
+                
+                try {
+                    showLoading();
+                    
+                    for (const file of validFiles) {
+                        const formData = new FormData();
+                        formData.append('file', file);
+                        formData.append('session_id', researchSessionId);
+                        
+                        const response = await fetch('/research-upload', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (response.ok) {
+                            uploadedFiles.push({
+                                name: file.name,
+                                size: file.size,
+                                uploadTime: new Date().toISOString()
+                            });
+                        } else {
+                            throw new Error(result.detail || `Failed to upload ${file.name}`);
+                        }
+                    }
+                    
+                    displayUploadedFiles();
+                    updateChatState();
+                    clearMessages();
+                    showSuccessMessage(`Successfully uploaded ${validFiles.length} file(s) for research.`);
+                    
+                } catch (error) {
+                    showErrorMessage('Error uploading files: ' + error.message);
+                } finally {
+                    hideLoading();
+                }
+            }
+            
+            // Display uploaded files
+            function displayUploadedFiles() {
+                const container = document.getElementById('filesContainer');
+                const listElement = document.getElementById('uploadedFilesList');
+                
+                // Check if elements exist before trying to access them
+                if (!container || !listElement) {
+                    console.warn('Files container elements not found');
+                    return;
+                }
+                
+                if (uploadedFiles.length > 0) {
+                    listElement.style.display = 'block';
+                    
+                    let html = '';
+                    uploadedFiles.forEach((file, index) => {
+                        const sizeKB = Math.round(file.size / 1024);
+                        html += `
+                            <div class="d-flex justify-content-between align-items-center p-2 mb-2" style="background: rgba(255,255,255,0.1); border-radius: 8px;">
+                                <div>
+                                    <i class="fas fa-file me-2"></i>
+                                    <span class="text-light">${file.name}</span>
+                                    <small class="text-muted ms-2">(${sizeKB} KB)</small>
+                                </div>
+                                <button class="btn btn-sm btn-outline-danger" onclick="removeFile(${index})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        `;
+                    });
+                    
+                    container.innerHTML = html;
+                } else {
+                    listElement.style.display = 'none';
+                }
+            }
+            
+            // Remove uploaded file
+            window.removeFile = function(index) {
+                uploadedFiles.splice(index, 1);
+                displayUploadedFiles();
+                updateChatState();
+            };
+            
+            // Research file input change handler
+            const researchFilesInput = document.getElementById('researchFiles');
+            if (researchFilesInput) {
+                researchFilesInput.addEventListener('change', function(e) {
+                    const files = Array.from(e.target.files);
+                    if (files.length > 0) {
+                        handleResearchFiles(files);
+                    }
+                });
+            }
             
             // Initialize drag and drop
             function initializeDragDrop() {
@@ -1399,8 +2162,11 @@ async def get_index():
             
             // Display dataset information
             function displayDatasetInfo(data) {
-                document.getElementById('uploadPrompt').style.display = 'none';
-                document.getElementById('datasetInfo').style.display = 'block';
+                const uploadPrompt = document.getElementById('uploadPrompt');
+                const datasetInfo = document.getElementById('datasetInfo');
+                
+                if (uploadPrompt) uploadPrompt.style.display = 'none';
+                if (datasetInfo) datasetInfo.style.display = 'block';
                 
                 // Create table preview
                 if (data.preview && data.preview.length > 0) {
@@ -1430,14 +2196,24 @@ async def get_index():
             
             // Clear messages
             function clearMessages() {
-                document.getElementById('messages').innerHTML = '';
-                document.getElementById('emptyChatMessage').style.display = 'block';
+                const messagesElement = document.getElementById('messages');
+                const emptyChatElement = document.getElementById('emptyChatMessage');
+                
+                if (messagesElement) {
+                    messagesElement.innerHTML = '';
+                }
+                if (emptyChatElement) {
+                    emptyChatElement.style.display = 'block';
+                }
                 messageCount = 0;
             }
             
             // Show success message
             function showSuccessMessage(message) {
-                document.getElementById('emptyChatMessage').style.display = 'none';
+                const emptyChatElement = document.getElementById('emptyChatMessage');
+                if (emptyChatElement) {
+                    emptyChatElement.style.display = 'none';
+                }
                 addMessage('system', `✅ ${message}`, null, null, null, 'success');
             }
             
@@ -1475,10 +2251,23 @@ async def get_index():
                         database_uri: databaseUri,
                         query: query
                     };
+                } else if (currentMode === 'research') {
+                    if (uploadedFiles.length === 0) {
+                        showErrorMessage('Please upload documents first.');
+                        return;
+                    }
+                    endpoint = '/research-chat';
+                    requestBody = {
+                        session_id: researchSessionId,
+                        query: query
+                    };
                 }
                 
                 // Add user message
-                document.getElementById('emptyChatMessage').style.display = 'none';
+                const emptyChatElement = document.getElementById('emptyChatMessage');
+                if (emptyChatElement) {
+                    emptyChatElement.style.display = 'none';
+                }
                 addMessage('user', query);
                 input.value = '';
                 
@@ -1509,6 +2298,11 @@ async def get_index():
             // Add message to chat
             function addMessage(role, content, plotUrl = null, thinking = null, code = null, type = 'normal') {
                 const messagesDiv = document.getElementById('messages');
+                if (!messagesDiv) {
+                    console.warn('Messages container not found');
+                    return;
+                }
+                
                 const messageDiv = document.createElement('div');
                 messageDiv.className = `message`;
                 messageCount++;
@@ -1595,44 +2389,76 @@ async def get_index():
                 
                 // Update clear button visibility
                 if (messageCount > 0) {
-                    document.getElementById('clearChat').style.display = 'inline-block';
+                    const clearChatBtn = document.getElementById('clearChat');
+                    if (clearChatBtn) {
+                        clearChatBtn.style.display = 'inline-block';
+                    }
                 }
             }
             
             // Show loading
             function showLoading() {
-                document.getElementById('loading').style.display = 'block';
-                document.getElementById('sendButton').disabled = true;
-                document.getElementById('chatInput').disabled = true;
+                const loadingElement = document.getElementById('loading');
+                const sendButton = document.getElementById('sendButton');
+                const chatInput = document.getElementById('chatInput');
+                
+                if (loadingElement) loadingElement.style.display = 'block';
+                if (sendButton) sendButton.disabled = true;
+                if (chatInput) chatInput.disabled = true;
             }
             
             // Hide loading
             function hideLoading() {
-                document.getElementById('loading').style.display = 'none';
+                const loadingElement = document.getElementById('loading');
+                const chatInput = document.getElementById('chatInput');
+                
+                if (loadingElement) loadingElement.style.display = 'none';
                 updateChatState(); // Re-enable based on current mode
-                document.getElementById('chatInput').focus();
+                if (chatInput) chatInput.focus();
             }
             
             // Clear chat handler
-            document.getElementById('clearChat').addEventListener('click', function() {
-                if (confirm('Are you sure you want to clear the chat history?')) {
-                    clearMessages();
-                    document.getElementById('clearChat').style.display = 'none';
-                }
-            });
+            const clearChatButton = document.getElementById('clearChat');
+            if (clearChatButton) {
+                clearChatButton.addEventListener('click', function() {
+                    if (confirm('Are you sure you want to clear the chat history?')) {
+                        clearMessages();
+                        clearChatButton.style.display = 'none';
+                    }
+                });
+            }
             
-            // Event listeners
-            document.getElementById('sendButton').addEventListener('click', sendMessage);
-            document.getElementById('chatInput').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
+            // Initialize everything when DOM is ready
+            function initializeApp() {
+                // Event listeners
+                const sendButton = document.getElementById('sendButton');
+                const chatInput = document.getElementById('chatInput');
+                
+                if (sendButton) {
+                    sendButton.addEventListener('click', sendMessage);
                 }
-            });
+                
+                if (chatInput) {
+                    chatInput.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            sendMessage();
+                        }
+                    });
+                }
+                
+                // Initialize drag and drop functionality
+                initializeDragDrop();
+                initializeResearchUpload();
+                updateChatState();
+            }
             
-            // Initialize
-            initializeDragDrop();
-            updateChatState();
+            // Initialize when DOM is ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initializeApp);
+            } else {
+                initializeApp();
+            }
         </script>
     </body>
     </html>
@@ -1701,6 +2527,86 @@ async def database_chat(request: DatabaseQueryRequest):
             response=error_msg,
             plot_url=None,
             thinking=f"Error occurred while processing database query: {str(e)}",
+            code=None
+        )
+
+@app.post("/research-upload")
+async def research_upload(file: UploadFile = File(...), session_id: str = Form(...)):
+    """Handle research document upload using UnstructuredFileLoader."""
+    try:
+        # Validate file type
+        valid_extensions = ['.pdf', '.txt', '.docx', '.xlsx', '.pptx']
+        file_extension = '.' + file.filename.split('.')[-1].lower()
+        
+        if file_extension not in valid_extensions:
+            raise HTTPException(status_code=400, detail=f"Unsupported file type. Supported: {', '.join(valid_extensions)}")
+        
+        # Create session if it doesn't exist
+        if session_id not in sessions:
+            sessions[session_id] = {}
+        
+        session = sessions[session_id]
+        if 'research_docs' not in session:
+            session['research_docs'] = []
+        
+        # Save file temporarily
+        file_content = await file.read()
+        temp_file_path = os.path.join(tempfile.gettempdir(), f"{session_id}_{file.filename}")
+        
+        with open(temp_file_path, 'wb') as temp_file:
+            temp_file.write(file_content)
+        
+        # Load document using UnstructuredFileLoader
+        try:
+            loader = UnstructuredFileLoader(temp_file_path)
+            documents = loader.load()
+            
+            # Extract text content
+            doc_content = "\n".join([doc.page_content for doc in documents if doc.page_content.strip()])
+            
+            if doc_content.strip():
+                session['research_docs'].append(f"File: {file.filename}\nContent: {doc_content}")
+                
+                # Clean up temp file
+                if os.path.exists(temp_file_path):
+                    os.remove(temp_file_path)
+                
+                return JSONResponse({
+                    "status": "success",
+                    "filename": file.filename,
+                    "content_length": len(doc_content),
+                    "message": f"Successfully processed {file.filename}"
+                })
+            else:
+                raise HTTPException(status_code=400, detail=f"No readable content found in {file.filename}")
+                
+        except Exception as e:
+            # Clean up temp file on error
+            if os.path.exists(temp_file_path):
+                os.remove(temp_file_path)
+            raise HTTPException(status_code=500, detail=f"Error processing file {file.filename}: {str(e)}")
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+
+@app.post("/research-chat", response_model=ChatResponse)
+async def research_chat(request: ResearchQueryRequest):
+    """Handle research chat queries using agentic AI workflow."""
+    try:
+        # Process query using agentic workflow
+        response = process_research_query(request.session_id, request.query)
+        return response
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        error_msg = f"Research chat failed: {str(e)}"
+        return ChatResponse(
+            response=error_msg,
+            plot_url=None,
+            thinking=f"Error occurred while processing research query: {str(e)}",
             code=None
         )
 
