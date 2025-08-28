@@ -32,6 +32,18 @@ An advanced AI-powered document analysis system that uses **Mixture of Experts (
 - **Frontend**: Bootstrap 5, Vanilla JavaScript
 - **Text Processing**: RecursiveCharacterTextSplitter
 
+## Project Screenshots :
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/mixture_of_experts/static/m1.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/mixture_of_experts/static/m2.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/mixture_of_experts/static/m3.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/mixture_of_experts/static/m4.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/mixture_of_experts/static/m5.JPG)
+
 ## Installation
 
 1. **Clone the repository**:
