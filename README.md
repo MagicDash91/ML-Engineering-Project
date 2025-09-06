@@ -84,6 +84,21 @@ A dual-pipeline AI system combining LLMs with RAG (Retrieval-Augmented Generatio
 - LLM + RAG Pipeline (main.py): Analyze text documents (e.g. policy PDFs, claim descriptions) to determine fraud risk level (low-risk vs. high-risk).
 - Computer Vision + OCR Pipeline (main2.py): Extract and analyze data from uploaded receipts and detect potential tampering or inconsistencies.
 
+---
+
+### 📈 Sales Demand Forecasting App (SARIMA-powered)
+This project provides a web-based interactive platform for forecasting sales demand using SARIMA time series models. Built with FastAPI, Jinja2, and Chart.js, it offers intuitive visual diagnostics, forecast outputs, and performance metrics from uploaded CSV/Excel datasets.
+Features :
+- Upload sales datasets in CSV or Excel format
+- Select date and target value columns
+- Automatic data cleaning & frequency inference
+- Hyperparameter tuning for SARIMA with AIC optimization
+- Diagnostics: ACF, PACF, and seasonal decomposition
+- Forecasts: 30-day forecast with upper & lower confidence bounds
+- Metrics: MAE, RMSE, and MAPE evaluation
+- Visuals powered by Chart.js and Matplotlib
+- Export forecast results as CSV
+
 ## 🛠️ Skill Set
 
 ### 🗃️ Databases
