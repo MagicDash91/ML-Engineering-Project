@@ -77,6 +77,13 @@ Features :
 - Session Management: Multi-user support with isolated sessions
 - Real-time Processing: Asynchronous document processing and analysis
 
+---
+
+### 🧠 Medical Claims Anti-Fraud Detection System
+A dual-pipeline AI system combining LLMs with RAG (Retrieval-Augmented Generation) and Computer Vision + OCR to analyze and detect potential fraud in medical claim submissions. This project focuses on detecting fraudulent activities in medical claims by using both textual and image-based approaches. It is divided into two primary pipelines:
+- LLM + RAG Pipeline (main.py): Analyze text documents (e.g. policy PDFs, claim descriptions) to determine fraud risk level (low-risk vs. high-risk).
+- Computer Vision + OCR Pipeline (main2.py): Extract and analyze data from uploaded receipts and detect potential tampering or inconsistencies.
+
 ## 🛠️ Skill Set
 
 ### 🗃️ Databases
