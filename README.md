@@ -55,8 +55,7 @@ This project is a FastAPI web application that leverages advanced AI technologie
 
 ### 🧠 Adaptive RAG System
 An intelligent document analysis system that uses Retrieval-Augmented Generation (RAG) with self-reflection capabilities, built with FastAPI, LangChain, and Google's Gemini AI.
-
-Features
+Features :
 - PDF Document Processing: Upload and analyze PDF documents
 - Intelligent Retrieval: Vector-based document search using FAISS
 - Self-Reflection: Automatic quality checking and answer validation
@@ -66,7 +65,17 @@ Features
 - Relevance Grading: Grades retrieved documents for relevance
 - Process Transparency: Shows workflow steps and decision points
 
+---
 
+### 🧠 Gemini Mixture of Experts Document Analyzer
+An advanced AI-powered document analysis system that uses Mixture of Experts (MoE) with Google Gemini to provide comprehensive insights from multiple file types. The system features specialized AI experts that analyze documents from different perspectives and synthesizes their findings into actionable insights.
+Features :
+- Core Functionality
+- Multi-file Upload: Support for PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, CSV, TXT files
+- Mixture of Experts: 5 specialized AI personas for comprehensive analysis
+- Interactive Chat: RAG-powered Q&A with your documents
+- Session Management: Multi-user support with isolated sessions
+- Real-time Processing: Asynchronous document processing and analysis
 
 ## 🛠️ Skill Set
 
