@@ -53,6 +53,19 @@ This project is a FastAPI web application that leverages advanced AI technologie
 
 ---
 
+### 🧠 Adaptive RAG System
+An intelligent document analysis system that uses Retrieval-Augmented Generation (RAG) with self-reflection capabilities, built with FastAPI, LangChain, and Google's Gemini AI.
+
+Features
+- PDF Document Processing: Upload and analyze PDF documents
+- Intelligent Retrieval: Vector-based document search using FAISS
+- Self-Reflection: Automatic quality checking and answer validation
+- Web Search Fallback: Integrates web search when documents lack information
+- Adaptive Iterations: Rewrites questions and retries when needed
+- Hallucination Detection: Validates answers against source documents
+- Relevance Grading: Grades retrieved documents for relevance
+- Process Transparency: Shows workflow steps and decision points
+
 
 
 ## 🛠️ Skill Set
