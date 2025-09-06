@@ -99,6 +99,20 @@ Features :
 - Visuals powered by Chart.js and Matplotlib
 - Export forecast results as CSV
 
+---
+
+### 🧠 Fraud Prediction Web Application
+This project implements a Fraud Detection system that predicts fraudulent transactions using a Random Forest machine learning model. It provides an interactive web interface built with FastAPI and Bootstrap, allowing users to select a date range, view transaction predictions, and visualize total transaction amounts over time. Additionally, the project integrates advanced LangChain components with Google Generative AI for enhanced fraud data analysis and natural language insights.
+Features :
+- Upload or fetch transaction data from PostgreSQL database
+- Filter transactions by date range
+- Predict fraud on transactions using a pre-trained Random Forest model (random_forest_model.pkl)
+- Display fraud prediction results in a responsive HTML table
+- Visualize total transaction amount over selected dates using Seaborn line charts
+- Interactive UI built with FastAPI and Bootstrap for easy usability
+- Rich fraud analysis and insights powered by LangChain with Google Generative AI and LangSmith
+- Support for PDF, CSV document loading and embedding with FAISS vector stores for deep content analysis
+
 ## 🛠️ Skill Set
 
 ### 🗃️ Databases
