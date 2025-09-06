@@ -39,6 +39,22 @@ A Resume Matcher with Google Gemini and FastAPI, enabling:
 
 ---
 
+### 🔁 AgenticAI AI-Powered Indonesian Legal Document Analysis
+
+This project is a FastAPI web application that leverages advanced AI technologies, including Google Gemini (Gemini 2.0), LangChain, and LangGraph, to analyze Indonesian legal documents. Users can upload multiple legal files (PDF, Word, Excel, CSV, etc.), ask detailed questions about the content, and receive accurate, structured answers powered by a custom language model prompt focused on Indonesian law.
+- Upload multiple legal documents in various formats.
+- Extract and combine content from uploaded files using LangChain's UnstructuredFileLoader.
+- Use a custom language model prompt template specialized for interpreting Indonesian legal texts.
+- Intelligent question classification to query Wikipedia, academic papers (arXiv), and current events (Tavily) tools if relevant.
+- A multi-step LangGraph workflow that classifies questions, searches relevant sources, and summarizes results.
+- User-friendly web interface built with FastAPI and Bootstrap.
+- Supports detailed and structured responses, focusing on legal analysis, comparisons, summaries, and numeric data interpretation.
+- Designed specifically to understand and analyze Indonesian laws and regulations.
+
+---
+
+
+
 ## 🛠️ Skill Set
 
 ### 🗃️ Databases
