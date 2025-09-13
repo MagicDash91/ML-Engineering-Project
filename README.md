@@ -133,7 +133,7 @@ Features :
 - Google Cloud (Cloud Run, Cloud SQL), AWS (DynamoDB), Docker
 
 ### ⚡ Data Pipelines & Big Data
-- PySpark, Prefect
+- PySpark, Prefect, Airflow
 
 ### 📈 Visualization & BI
 - Tableau, Power BI
