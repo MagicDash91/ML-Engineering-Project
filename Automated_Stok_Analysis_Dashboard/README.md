@@ -22,21 +22,7 @@ A complete, end-to-end mini data platform for daily stock ingestion and AI-assis
 
 ## 🧱 Architecture (High-Level)
 
-```
-          ┌───────────────┐       yfinance        ┌───────────────┐
-          │   Airflow     │  ───────────────────► │  Yahoo Finance │
-          │  DAG (daily)  │                       └───────────────┘
-          │  stock_data_  │
-          │   scraper     │   write/UPSERT
-          └──────┬────────┘  ───────────────►  PostgreSQL (stock_data, stock_errors)
-                 │
-                 │ read
-                 ▼
-        ┌───────────────────┐      plots + AI        ┌───────────────┐
-        │    FastAPI        │  ───────────────────►  │   Gemini AI   │
-        │  Dashboard (UI)   │                        └───────────────┘
-        └───────────────────┘
-```
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Automated_Stok_Analysis_Dashboard/static/diagram.JPG)
 
 ---
 
