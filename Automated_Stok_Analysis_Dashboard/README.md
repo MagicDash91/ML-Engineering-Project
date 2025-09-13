@@ -50,6 +50,24 @@ A complete, end-to-end mini data platform for daily stock ingestion and AI-assis
 
 ---
 
+## Project Screenshots :
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Automated_Stok_Analysis_Dashboard/static/u1.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Automated_Stok_Analysis_Dashboard/static/u2.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Automated_Stok_Analysis_Dashboard/static/u3.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Automated_Stok_Analysis_Dashboard/static/u4.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Automated_Stok_Analysis_Dashboard/static/u5.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Automated_Stok_Analysis_Dashboard/static/u6.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Automated_Stok_Analysis_Dashboard/static/u7.JPG)
+
+---
+
 ## 📦 Repository Structure
 
 ```
