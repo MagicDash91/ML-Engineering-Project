@@ -223,11 +223,11 @@ def scrape_tiktok_trending(**context):
         'host': 'localhost',
         'database': 'appdb',
         'user': 'appuser',
-        'password': 'permataputihg101'
+        'password': '*****************'
     }
     
     TIKTOK_CONFIG = {
-        'ms_token': 'KWqFlSvzFHXNmK_SzgdEkcHrXtNdz117XrLMDkQssoVo6HuY2CvSLc4-WECQyN-PEuAT_1JcqAuT289cPJOrskYvjdeqZd0rgIHaU8VjTOCVZSxDVlhne-EtKZH2GF28fXr65IyrgxWhcbc=',
+        'ms_token': '*********************************************************************',
         'video_count': 10
     }
     
