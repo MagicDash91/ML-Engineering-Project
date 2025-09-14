@@ -1,0 +1,23 @@
+# Web framework
+fastapi
+uvicorn
+
+# Database & ORM
+sqlalchemy
+psycopg2-binary
+pandas
+numpy
+
+# Visualization
+matplotlib
+seaborn
+wordcloud
+
+# Google Gemini API
+google-generativeai
+Pillow
+markdown
+
+# Utilities
+python-dotenv
+emoji
