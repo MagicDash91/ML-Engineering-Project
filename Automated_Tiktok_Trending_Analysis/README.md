@@ -59,6 +59,22 @@ Airflow DAG (ETL) ──► PostgreSQL ──► FastAPI Dashboard ──► Vis
 
 ---
 
+## Project Screenshots :
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Automated_Tiktok_Trending_Analysis/static/u1.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Automated_Tiktok_Trending_Analysis/static/u2.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Automated_Tiktok_Trending_Analysis/static/u3.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Automated_Tiktok_Trending_Analysis/static/u4.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Automated_Tiktok_Trending_Analysis/static/u5.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Automated_Tiktok_Trending_Analysis/static/u6.JPG)
+
+---
+
 ## 📦 Repository Structure  
 
 ```
