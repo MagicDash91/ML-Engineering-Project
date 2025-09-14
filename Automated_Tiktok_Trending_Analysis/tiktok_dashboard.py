@@ -55,7 +55,7 @@ DB_CONFIG = {
     'host': 'localhost',
     'database': 'appdb',
     'user': 'appuser',
-    'password': 'permataputihg101'
+    'password': '************************************'
 }
 
 def get_database_engine():
