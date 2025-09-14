@@ -44,9 +44,7 @@ A complete, end-to-end mini data platform for **daily TikTok trending video inge
 
 ## 🧱 Architecture (High-Level)  
 
-```
-Airflow DAG (ETL) ──► PostgreSQL ──► FastAPI Dashboard ──► Visualizations + AI Insights
-```
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Automated_Tiktok_Trending_Analysis/static/dia.JPG)
 
 ---
 
