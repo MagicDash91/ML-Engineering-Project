@@ -32,7 +32,7 @@ from langchain_core.output_parsers import StrOutputParser
 import google.generativeai as genai
 import google.generativeai.types as gtypes
 from langchain.vectorstores import FAISS
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from fpdf import FPDF
 from datetime import datetime
 import os
@@ -47,10 +47,21 @@ from langchain.agents import initialize_agent, AgentType
 from langchain.tools import WikipediaQueryRun, ArxivQueryRun, Tool
 from langchain.utilities import WikipediaAPIWrapper, ArxivAPIWrapper
 from langchain_community.tools.tavily_search import TavilySearchResults
+from langchain_experimental.tools import PythonREPLTool
+from langchain_experimental.agents.agent_toolkits.python.base import create_python_agent
+from langchain.agents.agent_types import AgentType
 from langgraph.graph import StateGraph, END
 from typing import TypedDict, List, Optional
 import json
 import uuid
+
+# New imports for Google Drive functionality
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseDownload
+import pickle
 
 import tempfile
 
@@ -96,6 +107,15 @@ class ResearchQueryRequest(BaseModel):
     session_id: str
     query: str
 
+class GoogleDriveLoadRequest(BaseModel):
+    session_id: str
+    drive_url: str
+    recursive: bool = False
+
+class GoogleDriveQueryRequest(BaseModel):
+    session_id: str
+    query: str
+
 class ResearchState(TypedDict):
     question: str
     original_question: str
@@ -123,6 +143,142 @@ class DatasetInfo(BaseModel):
     rows: int
     insights: str
     preview: List[Dict[str, Any]]
+
+# === Utility Functions ===
+
+def extract_google_drive_folder_id(url: str) -> str:
+    """
+    Extract folder ID from Google Drive URL.
+
+    Supports URLs like:
+    - https://drive.google.com/drive/folders/1yucgL9WGgWZdM1TOuKkeghlPizuzMYb5
+    - https://drive.google.com/drive/u/0/folders/1yucgL9WGgWZdM1TOuKkeghlPizuzMYb5
+    - Or just the folder ID itself
+    """
+    import re
+
+    # Pattern to match folder ID in various URL formats
+    patterns = [
+        r'/folders/([a-zA-Z0-9_-]+)',  # Standard folder URL
+        r'id=([a-zA-Z0-9_-]+)',         # URL with id parameter
+        r'^([a-zA-Z0-9_-]{25,})$'       # Direct folder ID (typically 25+ chars)
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, url)
+        if match:
+            return match.group(1)
+
+    # If no pattern matches, assume it's already a folder ID
+    return url
+
+def load_google_drive_documents(folder_id: str, credentials_path: str, token_path: str, recursive: bool = False):
+    """
+    Manually load documents from Google Drive using Google Drive API.
+
+    Returns list of documents with metadata.
+    """
+    SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
+
+    creds = None
+
+    # Try service account first (if credentials_path is a service account key)
+    try:
+        from google.oauth2 import service_account
+        creds = service_account.Credentials.from_service_account_file(
+            credentials_path, scopes=SCOPES
+        )
+        print("Using service account credentials")
+    except Exception as e:
+        print(f"Not a service account, trying OAuth: {e}")
+
+        # Check if token already exists
+        if os.path.exists(token_path):
+            with open(token_path, 'rb') as token:
+                creds = pickle.load(token)
+
+        # If no valid credentials, authenticate
+        if not creds or not creds.valid:
+            if creds and creds.expired and creds.refresh_token:
+                creds.refresh(Request())
+            else:
+                flow = InstalledAppFlow.from_client_secrets_file(credentials_path, SCOPES)
+                creds = flow.run_local_server(port=0)
+
+            # Save credentials for future use
+            with open(token_path, 'wb') as token:
+                pickle.dump(creds, token)
+
+    # Build Drive service
+    service = build('drive', 'v3', credentials=creds)
+
+    documents = []
+
+    def get_files_from_folder(folder_id, recursive=False):
+        """Recursively get all files from folder"""
+        query = f"'{folder_id}' in parents and trashed=false"
+
+        results = service.files().list(
+            q=query,
+            fields="files(id, name, mimeType)",
+            pageSize=100
+        ).execute()
+
+        items = results.get('files', [])
+
+        for item in items:
+            mime_type = item['mimeType']
+
+            # Handle folders recursively if requested
+            if mime_type == 'application/vnd.google-apps.folder' and recursive:
+                get_files_from_folder(item['id'], recursive=True)
+
+            # Process supported file types
+            elif mime_type in [
+                'application/vnd.google-apps.document',  # Google Docs
+                'application/vnd.google-apps.spreadsheet',  # Google Sheets
+                'application/pdf'  # PDF
+            ]:
+                try:
+                    # Export Google Docs/Sheets as plain text
+                    if mime_type == 'application/vnd.google-apps.document':
+                        content = service.files().export(
+                            fileId=item['id'],
+                            mimeType='text/plain'
+                        ).execute()
+                        text_content = content.decode('utf-8')
+
+                    elif mime_type == 'application/vnd.google-apps.spreadsheet':
+                        content = service.files().export(
+                            fileId=item['id'],
+                            mimeType='text/csv'
+                        ).execute()
+                        text_content = content.decode('utf-8')
+
+                    elif mime_type == 'application/pdf':
+                        # For PDFs, download and extract text (basic)
+                        request = service.files().get_media(fileId=item['id'])
+                        text_content = f"[PDF File: {item['name']} - Content extraction requires additional processing]"
+
+                    else:
+                        text_content = ""
+
+                    if text_content.strip():
+                        documents.append({
+                            'name': item['name'],
+                            'content': text_content,
+                            'mime_type': mime_type,
+                            'id': item['id']
+                        })
+
+                except Exception as e:
+                    print(f"Error processing {item['name']}: {e}")
+                    continue
+
+    # Start loading files
+    get_files_from_folder(folder_id, recursive)
+
+    return documents
 
 # === Core Functions (from original code) ===
 
@@ -787,7 +943,7 @@ def DatabaseChatAgent(database_uri: str, query: str) -> str:
         llm = ChatGoogleGenerativeAI(
             model="gemini-2.0-flash",
             temperature=0.7,
-            google_api_key="AIzaSyAMAYxkjP49QZRCg21zImWWAu7c3YHJ0a8"
+            google_api_key="AIzaSyCtBa7c1cEWovpXZpIqJ1On8WwQPv5H7hk"
         )
         
         # Create database connection
@@ -805,7 +961,7 @@ def DatabaseChatAgent(database_uri: str, query: str) -> str:
         )
         
         # Execute query
-        response = agent_executor.run(query)
+        response = agent_executor.run({"input": query})
         return response
         
     except Exception as e:
@@ -869,13 +1025,10 @@ def tool_selection_node(state: ResearchState) -> ResearchState:
     - Is this about general concepts? -> Use Wikipedia
     - Is this about specific documents? -> Use DocumentAnalysis
     
-    Also determine if visualization would be helpful for this question.
-    
     Select 1-3 tools that would be most helpful. Return as comma-separated list.
     
     Format:
     TOOLS: tool1,tool2,tool3
-    VISUALIZATION: yes/no
     REASONING: why these tools were selected
     """
     
@@ -883,24 +1036,28 @@ def tool_selection_node(state: ResearchState) -> ResearchState:
         llm = ChatGoogleGenerativeAI(
             model="gemini-2.0-flash",
             temperature=0.2,
-            google_api_key="AIzaSyAMAYxkjP49QZRCg21zImWWAu7c3YHJ0a8"
+            google_api_key="AIzaSyCtBa7c1cEWovpXZpIqJ1On8WwQPv5H7hk"
         )
         result = llm.invoke(prompt)
         content = result.content.strip()
         
-        # Parse response
+        # Parse response for tool selection
         lines = content.split('\n')
         selected_tools = []
         reasoning = ""
-        visualization_needed = False
         
         for line in lines:
             if line.startswith('TOOLS:'):
                 selected_tools = [tool.strip() for tool in line.replace('TOOLS:', '').split(',')]
-            elif line.startswith('VISUALIZATION:'):
-                visualization_needed = 'yes' in line.lower()
             elif line.startswith('REASONING:'):
                 reasoning = line.replace('REASONING:', '').strip()
+        
+        # Use NVIDIA's QueryUnderstandingTool for visualization detection (like CSV Data feature)
+        visualization_needed = False
+        try:
+            visualization_needed = QueryUnderstandingTool(question)
+        except Exception as viz_error:
+            print(f"Visualization classification error: {viz_error}")
         
         return {
             **state,
@@ -979,7 +1136,7 @@ def enhanced_grade_node(state: ResearchState) -> ResearchState:
         llm = ChatGoogleGenerativeAI(
             model="gemini-2.0-flash",
             temperature=0.1,
-            google_api_key="AIzaSyAMAYxkjP49QZRCg21zImWWAu7c3YHJ0a8"
+            google_api_key="AIzaSyCtBa7c1cEWovpXZpIqJ1On8WwQPv5H7hk"
         )
         result = llm.invoke(prompt)
         is_relevant = "yes" in result.content.lower()
@@ -994,28 +1151,13 @@ def enhanced_generation_node(state: ResearchState) -> ResearchState:
     docs = state.get("docs", [])
     external_docs = state.get("external_docs", [])
     selected_tools = state.get("selected_tools", [])
-    visualization_needed = state.get("visualization_needed", False)
     
     all_docs = docs + external_docs
     context = "\n".join(all_docs)
     
-    # Generate chart if visualization is needed
-    plot_url = None
-    chart_data = None
-    
-    if visualization_needed:
-        try:
-            # Generate visualization based on the data and question
-            fig, chart_data = generate_research_visualization(question, context)
-            if fig:
-                plot_id = str(uuid.uuid4())
-                filename = f"research_plot_{plot_id}.png"
-                filepath = os.path.join("static", filename)
-                fig.savefig(filepath, dpi=100, bbox_inches='tight')
-                plt.close(fig)
-                plot_url = f"/static/{filename}"
-        except Exception as e:
-            chart_data = f"Visualization error: {e}"
+    # Visualization will be handled by separate visualization node
+    plot_url = state.get("plot_url")
+    chart_data = state.get("chart_data")
     
     prompt = f"""
     You are an expert research assistant. Synthesize information from multiple sources to provide a comprehensive answer.
@@ -1041,7 +1183,7 @@ def enhanced_generation_node(state: ResearchState) -> ResearchState:
         llm = ChatGoogleGenerativeAI(
             model="gemini-2.0-flash",
             temperature=0.3,
-            google_api_key="AIzaSyAMAYxkjP49QZRCg21zImWWAu7c3YHJ0a8"
+            google_api_key="AIzaSyCtBa7c1cEWovpXZpIqJ1On8WwQPv5H7hk"
         )
         response = llm.invoke(prompt)
         return {
@@ -1074,7 +1216,7 @@ def answer_check_node(state: ResearchState) -> ResearchState:
         llm = ChatGoogleGenerativeAI(
             model="gemini-2.0-flash",
             temperature=0.1,
-            google_api_key="AIzaSyAMAYxkjP49QZRCg21zImWWAu7c3YHJ0a8"
+            google_api_key="AIzaSyCtBa7c1cEWovpXZpIqJ1On8WwQPv5H7hk"
         )
         result = llm.invoke(prompt)
         answered = "yes" in result.content.lower()
@@ -1123,7 +1265,7 @@ def strategy_adaptation_node(state: ResearchState) -> ResearchState:
         llm = ChatGoogleGenerativeAI(
             model="gemini-2.0-flash",
             temperature=0.4,
-            google_api_key="AIzaSyAMAYxkjP49QZRCg21zImWWAu7c3YHJ0a8"
+            google_api_key="AIzaSyCtBa7c1cEWovpXZpIqJ1On8WwQPv5H7hk"
         )
         result = llm.invoke(prompt)
         content = result.content.strip()
@@ -1151,47 +1293,247 @@ def strategy_adaptation_node(state: ResearchState) -> ResearchState:
             "iteration_count": iteration_count + 1
         }
 
-def generate_research_visualization(question: str, context: str):
-    """Generate visualization if appropriate for the research question"""
-    try:
-        # Simple heuristic-based visualization
-        # In a more advanced implementation, you could use LLM to determine
-        # the best visualization type and extract data from context
-        
-        import matplotlib.pyplot as plt
-        import numpy as np
-        
-        # Example: Create a simple word frequency chart from the context
-        words = context.lower().split()
-        word_freq = {}
-        
-        # Count word frequencies (filter common words)
-        stop_words = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should'}
-        
-        for word in words:
-            if len(word) > 3 and word not in stop_words:
-                word_freq[word] = word_freq.get(word, 0) + 1
-        
-        # Get top 10 words
-        top_words = sorted(word_freq.items(), key=lambda x: x[1], reverse=True)[:10]
-        
-        if top_words:
-            fig, ax = plt.subplots(figsize=(10, 6))
-            words, freqs = zip(*top_words)
-            ax.bar(words, freqs, color='skyblue', alpha=0.7)
-            ax.set_title(f'Key Terms in Research Context\nQuestion: {question[:50]}...')
-            ax.set_xlabel('Terms')
-            ax.set_ylabel('Frequency')
-            plt.xticks(rotation=45, ha='right')
-            plt.tight_layout()
+def visualization_node(state: ResearchState) -> ResearchState:
+    """Generate visualization using LangChain Python Agent (like reference langchain_python_agent_for_ds.py)"""
+    question = state.get("question", "")
+    docs = state.get("docs", [])
+    external_docs = state.get("external_docs", [])
+    visualization_needed = state.get("visualization_needed", False)
+    
+    plot_url = None
+    chart_data = None
+    
+    print(f"Visualization node: visualization_needed = {visualization_needed}")
+    print(f"Visualization node: question = {question}")
+    print(f"Visualization node: docs count = {len(docs) if docs else 0}")
+    print(f"Visualization node: external_docs count = {len(external_docs) if external_docs else 0}")
+    
+    if visualization_needed:
+        try:
+            # Prepare research data for visualization
+            all_docs = docs + external_docs
+            context = "\n".join(all_docs) if all_docs else ""
             
-            chart_data = json.dumps(dict(top_words))
-            return fig, chart_data
+            print(f"Context length: {len(context)}")
+            
+            if not context or len(context) < 50:
+                print("Insufficient context for visualization")
+                chart_data = "Insufficient context for visualization"
+                return {**state, "plot_url": plot_url, "chart_data": chart_data}
+            
+            # Smart visualization detection - analyze what the user actually wants
+            import pandas as pd
+            import re
+            
+            # Detect if user wants specific data visualization vs general text analysis
+            question_lower = question.lower()
+            performance_keywords = ['performance', 'accuracy', 'precision', 'recall', 'f1', 'score', 'comparison', 'compare', 'model', 'algorithm', 'result']
+            chart_keywords = ['chart', 'plot', 'graph', 'visualization', 'bar', 'line', 'scatter', 'histogram']
+            model_keywords = ['adaboost', 'decision tree', 'random forest', 'svm', 'neural network', 'logistic regression', 'naive bayes']
+            
+            is_performance_request = any(keyword in question_lower for keyword in performance_keywords)
+            is_chart_request = any(keyword in question_lower for keyword in chart_keywords)
+            is_model_request = any(keyword in question_lower for keyword in model_keywords)
+            
+            print(f"Visualization analysis: performance={is_performance_request}, chart={is_chart_request}, model={is_model_request}")
+            
+            # Create LangChain Python Agent (using reference approach)
+            llm = ChatGoogleGenerativeAI(
+                model="gemini-2.0-flash",
+                temperature=0.3,
+                google_api_key="AIzaSyCtBa7c1cEWovpXZpIqJ1On8WwQPv5H7hk"
+            )
+            
+            # Create Python agent with manual prompt to avoid parsing errors
+            from langchain.agents import create_react_agent, AgentExecutor
+            from langchain.prompts import PromptTemplate
+            
+            prompt = PromptTemplate.from_template("""
+You are an expert Python programmer. You must write and execute Python code to create visualizations.
+
+CRITICAL: You MUST follow this exact format for every response:
+
+Question: the input question you must answer
+Thought: you should always think about what to do
+Action: Python_REPL
+Action Input: <put your python code here - NO markdown, NO backticks, just plain python code>
+Observation: the result of the action
+... (this Thought/Action/Action Input/Observation can repeat N times)
+Thought: I now know the final answer
+Final Answer: the final answer to the original input question
+
+IMPORTANT RULES:
+- NEVER use markdown code blocks (```python or ```tool_code)
+- Put code directly after "Action Input:" with no formatting
+- You have access to: matplotlib.pyplot, pandas, numpy, uuid, os, re
+- Save plots to "static/research_plot_<uuid>.png"
+- Print the final file path
+
+You have access to the following tools:
+{tools}
+
+To use a tool, use the following format:
+Action: the action to take, should be one of [{tool_names}]
+
+Begin!
+
+Question: {input}
+Thought:{agent_scratchpad}
+""")
+            
+            tools = [PythonREPLTool()]
+            agent = create_react_agent(llm, tools, prompt)
+            agent_executor = AgentExecutor(
+                agent=agent,
+                tools=tools,
+                verbose=True,
+                handle_parsing_errors=True,
+                max_iterations=5,
+                return_intermediate_steps=True
+            )
+            
+            # Save research context to text file for the Python agent
+            temp_text_path = os.path.join("static", "research_context.txt")
+            os.makedirs("static", exist_ok=True)
+            with open(temp_text_path, 'w', encoding='utf-8') as f:
+                f.write(f"USER QUESTION: {question}\n\n")
+                f.write("RESEARCH CONTEXT:\n")
+                f.write(context)
+            print(f"Saved research context to {temp_text_path}")
+            
+            # Intelligent visualization prompt based on request type
+            if is_performance_request and (is_model_request or is_chart_request):
+                # User wants specific model performance visualization
+                viz_prompt = f"""
+I have research data about '{question}' in a text file at '{temp_text_path}'.
+
+The user is asking for: "{question}"
+
+Please:
+1. Read the text file to understand the research context
+2. Extract any performance metrics, model results, or numerical data mentioned in the text
+3. Create an appropriate visualization based on what the user requested
+4. If the text contains model performance data (accuracy, precision, recall, etc.), create a comparison chart
+5. If no specific metrics are found, create a chart showing key findings from the research
+6. Use matplotlib with appropriate figure size
+7. Add proper title and axis labels based on the user's request
+8. Use good colors and styling
+9. Save the plot as PNG to 'static/research_plot_{{unique_id}}.png' where unique_id is a random 8-character string
+10. Print the saved file path
+
+Make sure to import all required libraries (pandas, matplotlib.pyplot, numpy, uuid, os).
+Be creative and intelligent about extracting and visualizing the data based on the user's specific request.
+Return the saved file path at the end.
+"""
+            else:
+                # Fall back to word frequency analysis for general text analysis requests
+                from collections import Counter
+                
+                words = context.lower().split()
+                stop_words = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'this', 'that', 'these', 'those', 'using', 'used', 'use', 'study', 'research', 'data', 'results', 'model', 'models', 'method', 'methods', 'from', 'also', 'can', 'may', 'one', 'two', 'three', 'new', 'more', 'time', 'first', 'last', 'other', 'each', 'many', 'some', 'most', 'all'}
+                
+                meaningful_words = []
+                for word in words:
+                    clean_word = re.sub(r'[^a-zA-Z]', '', word)
+                    if len(clean_word) > 3 and clean_word.lower() not in stop_words:
+                        meaningful_words.append(clean_word.lower())
+                
+                word_freq = Counter(meaningful_words)
+                top_words = word_freq.most_common(15)
+                
+                if top_words and len(top_words) >= 3:
+                    research_df = pd.DataFrame(top_words, columns=['Term', 'Frequency'])
+                    temp_csv_path = os.path.join("static", "research_temp_data.csv")
+                    research_df.to_csv(temp_csv_path, index=False)
+                    
+                    viz_prompt = f"""
+I have research data about '{question}' in a CSV file at '{temp_csv_path}'.
+
+Please:
+1. Load the CSV file using pandas: pd.read_csv('{temp_csv_path}')
+2. Create a horizontal bar chart showing the top 10 most frequent terms
+3. Use matplotlib with figure size (10, 6)
+4. Add proper title: 'Top Terms from Research: {question[:50]}...'
+5. Add axis labels: x-axis='Frequency', y-axis='Terms'
+6. Use color='skyblue' for bars
+7. Add grid with alpha=0.3
+8. Save the plot as PNG to 'static/research_plot_{{unique_id}}.png' where unique_id is a random 8-character string
+9. Use plt.tight_layout() before saving
+10. Print the saved file path
+
+Make sure to import all required libraries (pandas, matplotlib.pyplot, uuid, os).
+Return the saved file path at the end.
+"""
+                else:
+                    print("Insufficient data for any visualization")
+                    chart_data = "Insufficient data for visualization"
+                    return {**state, "plot_url": plot_url, "chart_data": chart_data}
+            
+            print("Executing visualization with LangChain Python Agent...")
+            
+            # Run the agent (this will execute Python code automatically)
+            agent_result = agent_executor.run({"input": viz_prompt})
+            print(f"Agent result: {agent_result}")
+            
+            # Extract the saved file path from agent result
+            import re
+            file_pattern = r"static/research_plot_[a-zA-Z0-9]{8}\.png"
+            file_match = re.search(file_pattern, str(agent_result))
+            
+            if file_match:
+                saved_file = file_match.group(0)
+                plot_url = f"/{saved_file}"
+                print(f"Research visualization created successfully using LangChain Python Agent: {plot_url}")
+                chart_data = {
+                    "visualization_type": "research_analysis",
+                    "generated_by": "langchain_python_agent",
+                    "data_source": "intelligent_detection" if is_performance_request else "research_terms"
+                }
+            else:
+                # Fallback: look for any PNG files created in static directory
+                import glob
+                png_files = glob.glob("static/research_plot_*.png")
+                if png_files:
+                    # Get the most recent file
+                    latest_file = max(png_files, key=os.path.getctime)
+                    plot_url = f"/{latest_file}"
+                    print(f"Found visualization file: {plot_url}")
+                    chart_data = {
+                        "visualization_type": "research_analysis",
+                        "generated_by": "langchain_python_agent_fallback",
+                        "data_source": "intelligent_detection" if is_performance_request else "research_terms"
+                    }
+                else:
+                    print("No plot file was generated by agent")
+                    chart_data = "No plot file was generated by Python agent"
+            
+            # Clean up temporary files
+            try:
+                if os.path.exists(temp_text_path):
+                    os.remove(temp_text_path)
+                    print(f"Cleaned up temporary file: {temp_text_path}")
+                
+                temp_csv_path = os.path.join("static", "research_temp_data.csv")
+                if os.path.exists(temp_csv_path):
+                    os.remove(temp_csv_path)
+                    print(f"Cleaned up temporary file: {temp_csv_path}")
+            except Exception as cleanup_error:
+                print(f"Error cleaning up temp files: {cleanup_error}")
+                
+            else:
+                print(f"Insufficient meaningful terms found: {len(top_words) if top_words else 0}")
+                chart_data = f"Insufficient meaningful terms found for visualization (found {len(top_words) if top_words else 0} terms)"
+                
+        except Exception as e:
+            print(f"Research visualization error: {e}")
+            import traceback
+            traceback.print_exc()
+            chart_data = f"Research visualization error: {e}"
+    else:
+        print("Visualization not needed for this query")
+        chart_data = "Visualization not requested"
     
-    except Exception as e:
-        print(f"Visualization error: {e}")
-    
-    return None, None
+    return {**state, "plot_url": plot_url, "chart_data": chart_data}
 
 # Build research workflow
 def build_research_workflow():
@@ -1202,6 +1544,7 @@ def build_research_workflow():
     workflow.add_node("ToolSelection", tool_selection_node)
     workflow.add_node("MultiRetrieve", multi_source_retrieve_node)
     workflow.add_node("Grade", enhanced_grade_node)
+    workflow.add_node("Visualization", visualization_node)
     workflow.add_node("Generate", enhanced_generation_node)
     workflow.add_node("Evaluate", answer_check_node)
     workflow.add_node("Adapt", strategy_adaptation_node)
@@ -1217,11 +1560,12 @@ def build_research_workflow():
         "Grade",
         lambda state: "Yes" if state["relevant"] else "No",
         {
-            "Yes": "Generate",
+            "Yes": "Visualization",
             "No": "Adapt"
         }
     )
     
+    workflow.add_edge("Visualization", "Generate")
     workflow.add_edge("Generate", "Evaluate")
     
     workflow.add_conditional_edges(
@@ -1315,7 +1659,7 @@ async def get_index():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Data Analysis Agent</title>
+        <title>Galvatron AI 8.0</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/marked/marked.min.js">
@@ -1668,8 +2012,8 @@ async def get_index():
                 <!-- Left Panel -->
                 <div class="col-lg-4 sidebar">
                     <div class="p-4">
-                        <h3 class="brand-title"><i class="fas fa-chart-line"></i> Data Analysis Agent</h3>
-                        <p class="small mb-4">Powered by <a href="https://build.nvidia.com/nvidia/llama-3_1-nemotron-ultra-253b-v1" target="_blank" class="nvidia-link">NVIDIA Llama-3.1-Nemotron-Ultra-253B-v1</a></p>
+                        <h3 class="brand-title"><i class="fas fa-chart-line"></i> Galvatron AI 8.0</h3>
+                        <p class="small mb-4">Powered by <a href="https://build.nvidia.com/nvidia/llama-3_1-nemotron-ultra-253b-v1" target="_blank" class="nvidia-link">Galvatron AI & Co</a></p>
                         
                         <!-- Tabs Navigation -->
                         <ul class="nav nav-tabs mb-3" id="mainTabs" role="tablist">
@@ -1686,6 +2030,11 @@ async def get_index():
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="research-tab" data-bs-toggle="tab" data-bs-target="#research-panel" type="button" role="tab">
                                     <i class="fas fa-search"></i> Research
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="google-drive-tab" data-bs-toggle="tab" data-bs-target="#google-drive-panel" type="button" role="tab">
+                                    <i class="fab fa-google-drive"></i> Google Drive
                                 </button>
                             </li>
                         </ul>
@@ -1798,6 +2147,47 @@ async def get_index():
                                     Upload documents and ask research questions. The AI will intelligently select tools, search multiple sources, and provide comprehensive answers with visualizations when needed.
                                 </div>
                             </div>
+
+                            <!-- Google Drive Tab -->
+                            <div class="tab-pane fade" id="google-drive-panel" role="tabpanel">
+                                <!-- Google Drive URL Input -->
+                                <div class="mb-4">
+                                    <div class="database-input-group">
+                                        <label for="googleDriveUrl">
+                                            <i class="fab fa-google-drive me-2"></i>Google Drive Folder URL
+                                        </label>
+                                        <input
+                                            type="text"
+                                            class="form-control"
+                                            id="googleDriveUrl"
+                                            placeholder="https://drive.google.com/drive/folders/YOUR_FOLDER_ID"
+                                            style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); color: white;">
+                                        <div class="mt-2">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="recursiveLoad">
+                                                <label class="form-check-label text-light" for="recursiveLoad">
+                                                    Load files from subfolders (recursive)
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-primary mt-3 w-100" id="loadGoogleDriveBtn">
+                                            <i class="fab fa-google-drive me-2"></i>Load from Google Drive
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Loaded Files List -->
+                                <div id="googleDriveFilesList" style="display: none;">
+                                    <h6 class="mb-3 text-light"><i class="fas fa-files"></i> Loaded Files</h6>
+                                    <div id="googleDriveFilesContainer" class="mb-3"></div>
+                                </div>
+
+                                <div class="alert alert-info" style="background: rgba(56, 239, 125, 0.2); border: 1px solid rgba(56, 239, 125, 0.3); color: white;">
+                                    <i class="fab fa-google-drive me-2"></i>
+                                    <strong>Google Drive Integration:</strong><br>
+                                    Paste your Google Drive folder URL and load documents directly from your drive. Supports Google Docs, Sheets, and PDFs. The first time you use this feature, you'll need to authorize access to your Google Drive.
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1852,8 +2242,9 @@ async def get_index():
         <script>
             let sessionId = null;
             let messageCount = 0;
-            let currentMode = 'csv'; // 'csv', 'database', or 'research'
+            let currentMode = 'csv'; // 'csv', 'database', 'research', or 'google-drive'
             let researchSessionId = null;
+            let googleDriveSessionId = null;
             let uploadedFiles = [];
             
             // Generate session ID
@@ -1878,6 +2269,10 @@ async def get_index():
                         } else if (targetId === '#research-panel') {
                             currentMode = 'research';
                             document.getElementById('chatTitle').textContent = 'Agentic AI Research';
+                            updateChatState();
+                        } else if (targetId === '#google-drive-panel') {
+                            currentMode = 'google-drive';
+                            document.getElementById('chatTitle').textContent = 'Chat with Google Drive';
                             updateChatState();
                         }
                     });
@@ -1914,9 +2309,16 @@ async def get_index():
                     const hasFiles = uploadedFiles.length > 0;
                     chatInput.disabled = !hasFiles;
                     sendButton.disabled = !hasFiles;
-                    chatInput.placeholder = hasFiles ? 
-                        "Ask research questions about your documents..." : 
+                    chatInput.placeholder = hasFiles ?
+                        "Ask research questions about your documents..." :
                         "Upload documents first...";
+                } else if (currentMode === 'google-drive') {
+                    const hasSession = googleDriveSessionId !== null;
+                    chatInput.disabled = !hasSession;
+                    sendButton.disabled = !hasSession;
+                    chatInput.placeholder = hasSession ?
+                        "Ask questions about your Google Drive documents..." :
+                        "Load Google Drive folder first...";
                 }
             }
             
@@ -2080,7 +2482,69 @@ async def get_index():
                     }
                 });
             }
-            
+
+            // Google Drive load button handler
+            const loadGoogleDriveBtn = document.getElementById('loadGoogleDriveBtn');
+            if (loadGoogleDriveBtn) {
+                loadGoogleDriveBtn.addEventListener('click', async function() {
+                    const urlInput = document.getElementById('googleDriveUrl');
+                    const recursiveCheckbox = document.getElementById('recursiveLoad');
+                    const driveUrl = urlInput ? urlInput.value.trim() : '';
+
+                    if (!driveUrl) {
+                        showErrorMessage('Please enter a Google Drive folder URL');
+                        return;
+                    }
+
+                    // Generate session ID if not exists
+                    if (!googleDriveSessionId) {
+                        googleDriveSessionId = generateSessionId();
+                    }
+
+                    try {
+                        loadGoogleDriveBtn.disabled = true;
+                        loadGoogleDriveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading...';
+
+                        const response = await fetch('/google-drive-load', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                session_id: googleDriveSessionId,
+                                drive_url: driveUrl,
+                                recursive: recursiveCheckbox ? recursiveCheckbox.checked : false
+                            })
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok && data.status === 'success') {
+                            // Display loaded files
+                            const filesContainer = document.getElementById('googleDriveFilesContainer');
+                            const filesList = document.getElementById('googleDriveFilesList');
+
+                            if (filesContainer && filesList) {
+                                filesContainer.innerHTML = data.files.map(file =>
+                                    `<div class="badge bg-success me-2 mb-2"><i class="fas fa-file me-1"></i>${file}</div>`
+                                ).join('');
+                                filesList.style.display = 'block';
+                            }
+
+                            showSuccessMessage(data.message);
+                            updateChatState();
+                        } else {
+                            showErrorMessage(data.detail || 'Failed to load Google Drive folder');
+                        }
+                    } catch (error) {
+                        showErrorMessage('Error loading Google Drive: ' + error.message);
+                    } finally {
+                        loadGoogleDriveBtn.disabled = false;
+                        loadGoogleDriveBtn.innerHTML = '<i class="fab fa-google-drive me-2"></i>Load from Google Drive';
+                    }
+                });
+            }
+
             // Initialize drag and drop
             function initializeDragDrop() {
                 const uploadArea = document.getElementById('uploadArea');
@@ -2261,8 +2725,18 @@ async def get_index():
                         session_id: researchSessionId,
                         query: query
                     };
+                } else if (currentMode === 'google-drive') {
+                    if (!googleDriveSessionId) {
+                        showErrorMessage('Please load Google Drive folder first.');
+                        return;
+                    }
+                    endpoint = '/google-drive-chat';
+                    requestBody = {
+                        session_id: googleDriveSessionId,
+                        query: query
+                    };
                 }
-                
+
                 // Add user message
                 const emptyChatElement = document.getElementById('emptyChatMessage');
                 if (emptyChatElement) {
@@ -2598,7 +3072,7 @@ async def research_chat(request: ResearchQueryRequest):
         # Process query using agentic workflow
         response = process_research_query(request.session_id, request.query)
         return response
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -2607,6 +3081,134 @@ async def research_chat(request: ResearchQueryRequest):
             response=error_msg,
             plot_url=None,
             thinking=f"Error occurred while processing research query: {str(e)}",
+            code=None
+        )
+
+@app.post("/google-drive-load")
+async def google_drive_load(request: GoogleDriveLoadRequest):
+    """Load documents from Google Drive folder."""
+    try:
+        # Extract folder ID from URL
+        folder_id = extract_google_drive_folder_id(request.drive_url)
+
+        # Create session if it doesn't exist
+        if request.session_id not in sessions:
+            sessions[request.session_id] = {}
+
+        session = sessions[request.session_id]
+        if 'google_drive_docs' not in session:
+            session['google_drive_docs'] = []
+
+        # Path to client secret JSON
+        client_secret_path = r"d:\Langsmith-main\data_analyst_agent\GenerativeAIExamples\community\data-analysis-agent\client_secret_5752229595-3ohesd691r9q4td6cst1fqqq2c3q59pf.apps.googleusercontent.com.json"
+
+        # Path for token (will be created in same directory as client secret)
+        token_path = os.path.join(
+            os.path.dirname(client_secret_path),
+            f"google_token_{request.session_id}.pkl"
+        )
+
+        # Load documents using custom function
+        documents = load_google_drive_documents(
+            folder_id=folder_id,
+            credentials_path=client_secret_path,
+            token_path=token_path,
+            recursive=request.recursive
+        )
+
+        if not documents:
+            raise HTTPException(status_code=400, detail="No documents found in the specified Google Drive folder")
+
+        # Extract and store document content
+        loaded_files = []
+        for doc in documents:
+            if doc['content'].strip():
+                filename = doc['name']
+                session['google_drive_docs'].append(f"File: {filename}\nContent: {doc['content']}")
+                loaded_files.append(filename)
+
+        if not loaded_files:
+            raise HTTPException(status_code=400, detail="No readable content found in Google Drive documents")
+
+        return JSONResponse({
+            "status": "success",
+            "folder_id": folder_id,
+            "files_loaded": len(loaded_files),
+            "files": loaded_files,
+            "message": f"Successfully loaded {len(loaded_files)} documents from Google Drive"
+        })
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Google Drive load failed: {str(e)}")
+
+@app.post("/google-drive-chat", response_model=ChatResponse)
+async def google_drive_chat(request: GoogleDriveQueryRequest):
+    """Handle chat queries against Google Drive documents using agentic AI workflow."""
+    try:
+        # Get session data
+        if request.session_id not in sessions:
+            raise HTTPException(status_code=400, detail="Session not found. Please load Google Drive documents first.")
+
+        session = sessions[request.session_id]
+        google_drive_docs = session.get('google_drive_docs', [])
+
+        if not google_drive_docs:
+            raise HTTPException(status_code=400, detail="No Google Drive documents found in session. Please load documents first.")
+
+        # Build workflow (reusing the research workflow)
+        workflow = build_research_workflow()
+
+        # Prepare initial state
+        initial_state = {
+            "question": request.query,
+            "original_question": request.query,
+            "docs": google_drive_docs,
+            "external_docs": None,
+            "answer": None,
+            "relevant": None,
+            "answered": None,
+            "selected_tools": None,
+            "search_strategy": None,
+            "iteration_count": 0,
+            "reasoning": None,
+            "visualization_needed": None,
+            "chart_data": None,
+            "plot_url": None
+        }
+
+        # Execute workflow with increased recursion limit
+        result = workflow.invoke(initial_state, config={"recursion_limit": 50})
+
+        # Store in session history
+        if 'google_drive_messages' not in session:
+            session['google_drive_messages'] = []
+
+        session['google_drive_messages'].append({
+            'query': request.query,
+            'response': result.get("answer", "No answer generated"),
+            'plot_url': result.get("plot_url"),
+            'reasoning': result.get("reasoning", ""),
+            'selected_tools': result.get("selected_tools", []),
+            'timestamp': pd.Timestamp.now().isoformat()
+        })
+
+        return ChatResponse(
+            response=result.get("answer", "No answer generated"),
+            plot_url=result.get("plot_url"),
+            thinking=f"Google Drive analysis completed. Tools used: {', '.join(result.get('selected_tools', []))}. Reasoning: {result.get('reasoning', '')}",
+            code=None
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        error_msg = f"Google Drive chat failed: {str(e)}"
+        return ChatResponse(
+            response=error_msg,
+            plot_url=None,
+            thinking=f"Error occurred during Google Drive chat: {str(e)}",
             code=None
         )
 
@@ -2641,7 +3243,7 @@ async def chat(request: QueryRequest):
         if df is None or df.empty:
             raise HTTPException(status_code=400, detail="No valid data found in session. Please upload a CSV file.")
 
-        llm_model = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key="AIzaSyAMAYxkjP49QZRCg21zImWWAu7c3YHJ0a8")
+        llm_model = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key="AIzaSyCtBa7c1cEWovpXZpIqJ1On8WwQPv5H7hk")
 
         # Convert DataFrame to Excel file temporarily for UnstructuredFileLoader
         import tempfile
@@ -2737,7 +3339,7 @@ async def chat(request: QueryRequest):
             os.remove(temp_excel_path)
 
         # Create FAISS vector store and retriever for chat functionality
-        embedder = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+        embedder = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
         vectorstore = FAISS.from_documents(chunks, embedder)
         retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
 
@@ -2834,7 +3436,7 @@ async def chat(request: QueryRequest):
                             """
                             
                             # Generate enhanced analysis using Gemini
-                            genai.configure(api_key="AIzaSyAMAYxkjP49QZRCg21zImWWAu7c3YHJ0a8")
+                            genai.configure(api_key="AIzaSyCtBa7c1cEWovpXZpIqJ1On8WwQPv5H7hk")
                             model = genai.GenerativeModel("gemini-2.0-flash")
                             gemini_response = model.generate_content(
                                 [analysis_prompt, img_plot],
