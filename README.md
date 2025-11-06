@@ -86,6 +86,21 @@ A dual-pipeline AI system combining LLMs with RAG (Retrieval-Augmented Generatio
 
 ---
 
+### 🔍 Passport OCR Fine-Tuning with DeepSeek Vision Model
+A specialized OCR (Optical Character Recognition) system fine-tuned on DeepSeek-OCR vision model to accurately extract and transcribe text from Canadian passport documents. This project focuses on improving baseline OCR performance through parameter-efficient fine-tuning using LoRA adapters, reducing Character Error Rate (CER) from 23% to optimized levels for passport data extraction. The system is divided into two primary components:
+
+- Vision Model Fine-Tuning Pipeline: Utilizes Unsloth's FastVisionModel with DeepSeek-OCR as the base model, implementing LoRA (Low-Rank Adaptation) adapters to efficiently train only 1% of model parameters while maintaining high accuracy.
+- Custom Dataset Processing Pipeline: Handles hierarchical folder structures (CAN/HK888152/L1/B1/A1/D1.jpg) with automated image path construction from CSV metadata, enabling efficient batch processing and lazy loading for memory optimization.
+
+#### Project Objectives :
+- Fine-tune DeepSeek-OCR vision model for Canadian passport text extraction
+- Reduce Character Error Rate (CER) from 23% baseline to production-ready accuracy
+- Implement parameter-efficient training using LoRA adapters
+- Create scalable pipeline for processing passport datasets with complex folder hierarchies
+- Enable accurate digitization of passport information for automated document processing
+
+---
+
 ### 📈 Sales Demand Forecasting App (SARIMA-powered)
 This project provides a web-based interactive platform for forecasting sales demand using SARIMA time series models. Built with FastAPI, Jinja2, and Chart.js, it offers intuitive visual diagnostics, forecast outputs, and performance metrics from uploaded CSV/Excel datasets.
 Features :
@@ -113,6 +128,18 @@ Features :
 - Rich fraud analysis and insights powered by LangChain with Google Generative AI and LangSmith
 - Support for PDF, CSV document loading and embedding with FAISS vector stores for deep content analysis
 
+--- 
+
+### ☁️ AWS Cloud Infrastructure with CAG System
+A comprehensive AWS cloud infrastructure project demonstrating enterprise-level networking and deployment practices. This project showcases the implementation of a custom AWS Virtual Private Cloud (VPC) with properly segmented public and private subnets, AWS Internet Gateway for public connectivity, and AWS NAT Gateway for secure outbound access from private resources. The infrastructure hosts a Context Augmented Generation (CAG) system powered by Google Gemini AI, deployed on an AWS EC2 instance running Ubuntu Server. The project emphasizes AWS best practices including proper subnet isolation, custom AWS route table configurations, AWS security group management, and scalable AWS network architecture design. This implementation demonstrates proficiency in AWS networking fundamentals, AWS resource provisioning, and deploying production-ready applications on AWS cloud infrastructure.
+Tech Stack :
+- Cloud: AWS (VPC, EC2, NAT Gateway, Internet Gateway)
+- Backend: Python, FastAPI, Uvicorn
+- AI: Google Gemini API
+- OS: Ubuntu 24.04 LTS
+
+--- 
+
 ## 🛠️ Skill Set
 
 ### 🗃️ Databases
@@ -130,7 +157,9 @@ Features :
 - Vector DBs: FAISS, ChromaDB
 
 ### ☁️ Cloud & Deployment
-- Google Cloud (Cloud Run, Cloud SQL), AWS (DynamoDB), Docker
+- Google Cloud (Cloud Run, Cloud SQL)
+- AWS (DynamoDB, EC2, VPC)
+- Docker
 
 ### ⚡ Data Pipelines & Big Data
 - PySpark, Prefect, Airflow
