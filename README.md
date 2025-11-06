@@ -153,7 +153,7 @@ A specialized OCR (Optical Character Recognition) system fine-tuned on DeepSeek-
 
 ### 🧠 LLM & RAG Apps
 - LangChain, LlamaIndex, OpenAI, Google Gemini, Langgraph, Langsmith
-- LLM Finetuning : LoRA, QLoRA (Unsloth)
+- LLM Finetuning : LoRA, QLoRA, Deepseek OCR (Unsloth)
 - Vector DBs: FAISS, ChromaDB
 
 ### ☁️ Cloud & Deployment
