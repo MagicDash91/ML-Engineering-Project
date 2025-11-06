@@ -86,21 +86,6 @@ A dual-pipeline AI system combining LLMs with RAG (Retrieval-Augmented Generatio
 
 ---
 
-### 🔍 Passport OCR Fine-Tuning with DeepSeek Vision Model
-A specialized OCR (Optical Character Recognition) system fine-tuned on DeepSeek-OCR vision model to accurately extract and transcribe text from Canadian passport documents. This project focuses on improving baseline OCR performance through parameter-efficient fine-tuning using LoRA adapters, reducing Character Error Rate (CER) from 23% to optimized levels for passport data extraction. The system is divided into two primary components:
-
-- Vision Model Fine-Tuning Pipeline: Utilizes Unsloth's FastVisionModel with DeepSeek-OCR as the base model, implementing LoRA (Low-Rank Adaptation) adapters to efficiently train only 1% of model parameters while maintaining high accuracy.
-- Custom Dataset Processing Pipeline: Handles hierarchical folder structures (CAN/HK888152/L1/B1/A1/D1.jpg) with automated image path construction from CSV metadata, enabling efficient batch processing and lazy loading for memory optimization.
-
-#### Project Objectives :
-- Fine-tune DeepSeek-OCR vision model for Canadian passport text extraction
-- Reduce Character Error Rate (CER) from 23% baseline to production-ready accuracy
-- Implement parameter-efficient training using LoRA adapters
-- Create scalable pipeline for processing passport datasets with complex folder hierarchies
-- Enable accurate digitization of passport information for automated document processing
-
----
-
 ### 📈 Sales Demand Forecasting App (SARIMA-powered)
 This project provides a web-based interactive platform for forecasting sales demand using SARIMA time series models. Built with FastAPI, Jinja2, and Chart.js, it offers intuitive visual diagnostics, forecast outputs, and performance metrics from uploaded CSV/Excel datasets.
 Features :
@@ -139,6 +124,21 @@ Tech Stack :
 - OS: Ubuntu 24.04 LTS
 
 --- 
+
+### 🔍 Passport OCR Fine-Tuning with DeepSeek Vision Model
+A specialized OCR (Optical Character Recognition) system fine-tuned on DeepSeek-OCR vision model to accurately extract and transcribe text from Canadian passport documents. This project focuses on improving baseline OCR performance through parameter-efficient fine-tuning using LoRA adapters, reducing Character Error Rate (CER) from 23% to optimized levels for passport data extraction. The system is divided into two primary components:
+
+- Vision Model Fine-Tuning Pipeline: Utilizes Unsloth's FastVisionModel with DeepSeek-OCR as the base model, implementing LoRA (Low-Rank Adaptation) adapters to efficiently train only 1% of model parameters while maintaining high accuracy.
+- Custom Dataset Processing Pipeline: Handles hierarchical folder structures (CAN/HK888152/L1/B1/A1/D1.jpg) with automated image path construction from CSV metadata, enabling efficient batch processing and lazy loading for memory optimization.
+
+#### Project Objectives :
+- Fine-tune DeepSeek-OCR vision model for Canadian passport text extraction
+- Reduce Character Error Rate (CER) from 23% baseline to production-ready accuracy
+- Implement parameter-efficient training using LoRA adapters
+- Create scalable pipeline for processing passport datasets with complex folder hierarchies
+- Enable accurate digitization of passport information for automated document processing
+
+---
 
 ## 🛠️ Skill Set
 
