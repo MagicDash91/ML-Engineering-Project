@@ -45,6 +45,37 @@ This project demonstrates a complete AWS cloud infrastructure implementation wit
 - **RESTful API**: Clean API design with FastAPI framework
 - **Persistent Storage**: Context information stored and retrieved efficiently
 
+
+## Project Result
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/AWS_Virtual_Private_Cloud/static/v1.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/AWS_Virtual_Private_Cloud/static/v2.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/AWS_Virtual_Private_Cloud/static/v3.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/AWS_Virtual_Private_Cloud/static/v4.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/AWS_Virtual_Private_Cloud/static/v5.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/AWS_Virtual_Private_Cloud/static/v6.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/AWS_Virtual_Private_Cloud/static/v7.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/AWS_Virtual_Private_Cloud/static/v8.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/AWS_Virtual_Private_Cloud/static/v9.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/AWS_Virtual_Private_Cloud/static/v10.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/AWS_Virtual_Private_Cloud/static/v11.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/AWS_Virtual_Private_Cloud/static/v12.JPG)
+
+---
+
+
+
 ## 🚀 Deployment Architecture
 
 ```
