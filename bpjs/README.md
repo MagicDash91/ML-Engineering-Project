@@ -433,7 +433,7 @@ In AWS Console → EC2 → Security Groups:
 DB_CONFIG = {
     "dbname": "bpjs",
     "user": "postgres",
-    "password": "permataputihg101",
+    "password": "************************",
     "host": "localhost",
     "port": "5432"
 }
