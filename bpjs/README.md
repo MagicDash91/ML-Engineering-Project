@@ -116,6 +116,25 @@ EC2 Instance
 
 ---
 
+## Project Result
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/bpjs/static/j1.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/bpjs/static/j2.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/bpjs/static/j3.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/bpjs/static/j4.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/bpjs/static/j5.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/bpjs/static/j6.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/bpjs/static/j7.JPG)
+
+---
+
+
 ## ✨ Features
 
 ### 🤖 Application 1: Chat Assistant (`main.py`) - Port 8000
