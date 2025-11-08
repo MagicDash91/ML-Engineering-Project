@@ -221,7 +221,7 @@ EC2 Instance
 5. **Setup PostgreSQL Database**
    ```sql
    CREATE DATABASE bpjs;
-   ALTER USER postgres WITH PASSWORD 'permataputihg101';
+   ALTER USER postgres WITH PASSWORD '****************';
    ```
 
 6. **Run Applications**
@@ -291,7 +291,7 @@ Run these SQL commands:
 CREATE DATABASE bpjs;
 
 -- Set password
-ALTER USER postgres WITH PASSWORD 'permataputihg101';
+ALTER USER postgres WITH PASSWORD '*******************';
 
 -- Grant privileges
 GRANT ALL PRIVILEGES ON DATABASE bpjs TO postgres;
