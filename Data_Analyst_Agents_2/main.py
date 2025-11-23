@@ -943,15 +943,15 @@ def DatabaseChatAgent(database_uri: str, query: str) -> str:
         llm = ChatGoogleGenerativeAI(
             model="gemini-2.0-flash",
             temperature=0.7,
-            google_api_key="AIzaSyCtBa7c1cEWovpXZpIqJ1On8WwQPv5H7hk"
+            google_api_key="AIzaSyCowWFDIENMNDTBtGm5HkvWzeXG9SpIboI"
         )
-        
+
         # Create database connection
         db = SQLDatabase.from_uri(database_uri)
-        
+
         # Create SQL toolkit
         toolkit = SQLDatabaseToolkit(db=db, llm=llm)
-        
+
         # Initialize agent
         agent_executor = initialize_agent(
             tools=toolkit.get_tools(),
@@ -959,13 +959,356 @@ def DatabaseChatAgent(database_uri: str, query: str) -> str:
             agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
             verbose=True
         )
-        
+
         # Execute query
         response = agent_executor.run({"input": query})
         return response
-        
+
     except Exception as e:
         return f"Error connecting to database or executing query: {str(e)}"
+
+# === Automatic Dashboard Generation ===
+
+def AutomaticDashboardAgent(df: pd.DataFrame) -> str:
+    """
+    Generate a comprehensive, interactive dashboard HTML using NVIDIA LLAMA Nemotron.
+    Strategy: AI analyzes data and creates dashboard template, then we inject actual data.
+    """
+
+    # Prepare dataset analysis (lightweight - no raw data)
+    dataset_analysis = {
+        "columns": df.columns.tolist(),
+        "dtypes": {col: str(dtype) for col, dtype in df.dtypes.items()},
+        "shape": df.shape,
+        "numeric_cols": df.select_dtypes(include=['number']).columns.tolist(),
+        "categorical_cols": df.select_dtypes(include=['object', 'category']).columns.tolist(),
+        "datetime_cols": df.select_dtypes(include=['datetime64']).columns.tolist(),
+        "sample_preview": df.head(3).to_dict('records'),  # Just 3 rows for structure
+        "statistics": df.describe().to_dict() if not df.empty else {},
+        "missing_values": df.isnull().sum().to_dict(),
+        "unique_counts": {col: df[col].nunique() for col in df.columns}
+    }
+
+    # Get value ranges for filters
+    numeric_ranges = {}
+    for col in dataset_analysis['numeric_cols']:
+        numeric_ranges[col] = {
+            'min': float(df[col].min()),
+            'max': float(df[col].max())
+        }
+
+    # Get unique values for categorical filters (limit to top 20 per column)
+    categorical_values = {}
+    for col in dataset_analysis['categorical_cols']:
+        unique_vals = df[col].value_counts().head(20).index.tolist()
+        categorical_values[col] = [str(v) for v in unique_vals]
+
+    dataset_analysis['numeric_ranges'] = numeric_ranges
+    dataset_analysis['categorical_values'] = categorical_values
+
+    # Streamlined prompt for dashboard template generation
+    prompt = f"""
+You are an expert Data Visualization Engineer specializing in creating professional, interactive dashboards similar to Tableau and Power BI.
+
+# DATASET INFORMATION
+- **Rows**: {dataset_analysis['shape'][0]:,}
+- **Columns**: {dataset_analysis['shape'][1]}
+- **Column Names**: {', '.join(dataset_analysis['columns'])}
+- **Numeric Columns**: {', '.join(dataset_analysis['numeric_cols']) if dataset_analysis['numeric_cols'] else 'None'}
+- **Categorical Columns**: {', '.join(dataset_analysis['categorical_cols']) if dataset_analysis['categorical_cols'] else 'None'}
+- **Data Types**: {json.dumps(dataset_analysis['dtypes'], indent=2)}
+- **Statistics**: {json.dumps(dataset_analysis['statistics'], indent=2)[:500]}...
+
+# YOUR MISSION
+Create a **COMPLETE, SELF-CONTAINED HTML FILE** that displays a professional, interactive dashboard for this dataset.
+
+# CRITICAL REQUIREMENTS
+
+## 1. DASHBOARD STRUCTURE (Tableau/Power BI Style)
+```
+┌─────────────────────────────────────────────────┐
+│ 📊 DASHBOARD TITLE & DESCRIPTION                │
+├─────────────────────────────────────────────────┤
+│  [KPI 1]   │  [KPI 2]   │  [KPI 3]   │  [KPI 4] │  ← Key Metrics Cards
+├─────────────────────────────────────────────────┤
+│  🔍 INTERACTIVE FILTERS SECTION                 │  ← Dropdowns, Date pickers, Sliders
+├─────────────────────────────────────────────────┤
+│  ┌──────────────┐  ┌──────────────┐            │
+│  │   Chart 1    │  │   Chart 2    │            │  ← Grid of visualizations
+│  │  (Bar/Line)  │  │   (Pie/Donut)│            │
+│  └──────────────┘  └──────────────┘            │
+│  ┌──────────────┐  ┌──────────────┐            │
+│  │   Chart 3    │  │   Chart 4    │            │
+│  │  (Scatter)   │  │   (Heatmap)  │            │
+│  └──────────────┘  └──────────────┘            │
+├─────────────────────────────────────────────────┤
+│  📋 DATA TABLE (Paginated, Sortable, Searchable)│
+└─────────────────────────────────────────────────┘
+```
+
+## 2. MUST-HAVE COMPONENTS
+
+### A. Header Section
+- Dashboard title based on dataset content
+- Brief description of what the dashboard shows
+- Last updated timestamp
+- Export/Download buttons (Export as PDF, PNG)
+
+### B. KPI Cards (4-6 cards minimum)
+- Display key metrics (totals, averages, counts, percentages)
+- Use icons from Font Awesome
+- Color-coded (green for positive, red for negative, blue for neutral)
+- Animated counters (numbers count up on load)
+- Trend indicators (↑ ↓ arrows with percentage change if applicable)
+
+### C. Interactive Filters (Must implement)
+- Dropdowns for categorical columns (top 3-5 most relevant)
+- Date range picker if datetime columns exist
+- Numeric range sliders if numeric columns exist
+- "Reset Filters" button
+- Filters MUST update all charts and KPIs in real-time
+
+### D. Visualizations (Minimum 4-6 charts)
+Choose appropriate chart types based on data:
+- **Bar Chart**: For comparing categories
+- **Line Chart**: For trends over time
+- **Pie/Donut Chart**: For proportions/distributions
+- **Scatter Plot**: For correlations between numeric variables
+- **Heatmap**: For correlation matrix
+- **Area Chart**: For cumulative trends
+- **Stacked Bar**: For grouped comparisons
+
+### E. Data Table
+- Display all filtered data
+- Sortable columns (click header to sort)
+- Searchable (search box)
+- Paginated (show 10/25/50/100 rows)
+- Export to CSV button
+
+## 3. TECHNICAL SPECIFICATIONS
+
+### Libraries to Use:
+```html
+<!-- Use Chart.js for visualizations (lightweight, beautiful, interactive) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<!-- Bootstrap for responsive layout -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<!-- Optional: DataTables for advanced table features -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+```
+
+### Data Handling:
+**CRITICAL**: The data will be injected programmatically. Use this exact structure:
+```javascript
+// Data will be injected here - DO NOT MODIFY THIS LINE
+const rawData = __DATA_PLACEHOLDER__;
+const allColumns = {json.dumps(dataset_analysis['columns'])};
+const numericColumns = {json.dumps(dataset_analysis['numeric_cols'])};
+const categoricalColumns = {json.dumps(dataset_analysis['categorical_cols'])};
+const numericRanges = {json.dumps(numeric_ranges)};
+const categoricalOptions = {json.dumps(categorical_values)};
+```
+
+The `rawData` variable will contain all {dataset_analysis['shape'][0]:,} rows of data. Build all your charts, KPIs, filters, and tables to work with this variable.
+
+### Color Scheme (Professional):
+```css
+:root {{
+    --primary-color: #667eea;
+    --secondary-color: #764ba2;
+    --success-color: #11998e;
+    --danger-color: #ff416c;
+    --warning-color: #ffc107;
+    --info-color: #00b4d8;
+    --dark-bg: #1a1a2e;
+    --card-bg: #f8f9fa;
+    --text-primary: #2d3748;
+    --text-secondary: #6c757d;
+}}
+```
+
+## 4. INTERACTIVITY REQUIREMENTS
+
+### Chart Interactions:
+- Tooltips on hover showing exact values
+- Click on legend to toggle data series
+- Responsive to window resize
+- Smooth animations on load and update
+
+### Filter System:
+```javascript
+// When any filter changes:
+function applyFilters() {{
+    // 1. Filter the raw data based on selected criteria
+    // 2. Recalculate KPIs
+    // 3. Update all chart data
+    // 4. Refresh data table
+    // 5. Add smooth transition animations
+}}
+```
+
+## 5. DESIGN PRINCIPLES
+
+### Visual Hierarchy:
+1. KPIs at top (most important metrics first)
+2. Filters in prominent position
+3. Most important charts in top-left
+4. Data table at bottom
+
+### Responsive Design:
+- Desktop: 2-column chart grid
+- Tablet: 1-column chart grid
+- Mobile: Stack everything vertically
+- Use Bootstrap grid system (row/col-md-6/col-12)
+
+### Professional Styling:
+- Subtle shadows for depth (`box-shadow: 0 4px 6px rgba(0,0,0,0.1)`)
+- Rounded corners (`border-radius: 12px`)
+- Smooth transitions (`transition: all 0.3s ease`)
+- Consistent spacing (`padding: 20px`, `margin-bottom: 20px`)
+- Clean typography (system fonts)
+
+## 6. CODE STRUCTURE
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - [Dataset Name]</title>
+
+    <!-- All CDN links here -->
+
+    <style>
+        /* All CSS here - make it beautiful! */
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="dashboard-header">
+        <!-- Title, description, export buttons -->
+    </header>
+
+    <!-- KPI Cards -->
+    <section class="kpi-section container">
+        <div class="row">
+            <!-- 4-6 KPI cards -->
+        </div>
+    </section>
+
+    <!-- Filters -->
+    <section class="filters-section container">
+        <!-- Interactive filters -->
+    </section>
+
+    <!-- Charts -->
+    <section class="charts-section container">
+        <div class="row">
+            <!-- 4-6 canvas elements for charts -->
+        </div>
+    </section>
+
+    <!-- Data Table -->
+    <section class="table-section container">
+        <!-- Interactive data table -->
+    </section>
+
+    <script>
+        // 1. Data variables
+        // 2. Calculate KPIs function
+        // 3. Create charts function
+        // 4. Filter handling function
+        // 5. Table initialization
+        // 6. Initialize everything on page load
+    </script>
+</body>
+</html>
+```
+
+## 7. QUALITY CHECKLIST
+
+Before generating the final HTML, ensure:
+- ✅ All data is embedded (no external files needed)
+- ✅ Charts are interactive and responsive
+- ✅ Filters actually work and update everything
+- ✅ KPIs show meaningful metrics
+- ✅ Color scheme is professional and consistent
+- ✅ Layout works on mobile, tablet, desktop
+- ✅ Code is clean, commented, and organized
+- ✅ No console errors
+- ✅ Smooth animations and transitions
+- ✅ Looks as good as Tableau/Power BI
+
+# SAMPLE DATA PREVIEW
+Here's a sample to understand the data structure (full data will be injected):
+```json
+{json.dumps(dataset_analysis['sample_preview'], indent=2)}
+```
+
+**IMPORTANT**: The `rawData` variable will contain ALL {dataset_analysis['shape'][0]:,} rows. Design your dashboard to handle this complete dataset dynamically!
+
+# FINAL INSTRUCTION
+Generate the COMPLETE HTML file now. Return ONLY the HTML code, no explanations.
+Start with `<!DOCTYPE html>` and end with `</html>`.
+Make it absolutely stunning, professional, and fully functional!
+"""
+
+    # Call NVIDIA LLAMA Nemotron for generation
+    try:
+        messages = [
+            {
+                "role": "system",
+                "content": "You are an expert data visualization engineer who creates stunning, interactive dashboards. You output ONLY valid HTML code, no explanations, no markdown blocks."
+            },
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ]
+
+        response = client.chat.completions.create(
+            model="nvidia/llama-3.3-nemotron-super-49b-v1",
+            messages=messages,
+            temperature=0.3,
+            max_tokens=16000
+        )
+
+        dashboard_html = response.choices[0].message.content
+
+        # Clean up response (remove markdown code blocks if present)
+        if "```html" in dashboard_html:
+            dashboard_html = dashboard_html.split("```html")[1].split("```")[0].strip()
+        elif "```" in dashboard_html:
+            dashboard_html = dashboard_html.split("```")[1].split("```")[0].strip()
+
+        # INJECT ACTUAL DATA into the template
+        # Convert dataframe to JSON (all rows) - handle NaN values
+        df_clean = df.fillna('')  # Replace NaN with empty strings for JSON compatibility
+        actual_data_json = json.dumps(df_clean.to_dict('records'))
+
+        # Replace the placeholder with actual data
+        dashboard_html = dashboard_html.replace('__DATA_PLACEHOLDER__', actual_data_json)
+
+        # Also handle cases where AI might use quotes around placeholder
+        dashboard_html = dashboard_html.replace('"__DATA_PLACEHOLDER__"', actual_data_json)
+        dashboard_html = dashboard_html.replace("'__DATA_PLACEHOLDER__'", actual_data_json)
+
+        return dashboard_html
+
+    except Exception as e:
+        import traceback
+        error_detail = traceback.format_exc()
+        return f"<html><body><h1>Error generating dashboard</h1><p>{str(e)}</p><pre>{error_detail}</pre></body></html>"
 
 # === Research (Agentic AI) Functions ===
 
@@ -1036,7 +1379,7 @@ def tool_selection_node(state: ResearchState) -> ResearchState:
         llm = ChatGoogleGenerativeAI(
             model="gemini-2.0-flash",
             temperature=0.2,
-            google_api_key="AIzaSyCtBa7c1cEWovpXZpIqJ1On8WwQPv5H7hk"
+            google_api_key="AIzaSyCowWFDIENMNDTBtGm5HkvWzeXG9SpIboI"
         )
         result = llm.invoke(prompt)
         content = result.content.strip()
@@ -1136,7 +1479,7 @@ def enhanced_grade_node(state: ResearchState) -> ResearchState:
         llm = ChatGoogleGenerativeAI(
             model="gemini-2.0-flash",
             temperature=0.1,
-            google_api_key="AIzaSyCtBa7c1cEWovpXZpIqJ1On8WwQPv5H7hk"
+            google_api_key="AIzaSyCowWFDIENMNDTBtGm5HkvWzeXG9SpIboI"
         )
         result = llm.invoke(prompt)
         is_relevant = "yes" in result.content.lower()
@@ -1183,7 +1526,7 @@ def enhanced_generation_node(state: ResearchState) -> ResearchState:
         llm = ChatGoogleGenerativeAI(
             model="gemini-2.0-flash",
             temperature=0.3,
-            google_api_key="AIzaSyCtBa7c1cEWovpXZpIqJ1On8WwQPv5H7hk"
+            google_api_key="AIzaSyCowWFDIENMNDTBtGm5HkvWzeXG9SpIboI"
         )
         response = llm.invoke(prompt)
         return {
@@ -1216,7 +1559,7 @@ def answer_check_node(state: ResearchState) -> ResearchState:
         llm = ChatGoogleGenerativeAI(
             model="gemini-2.0-flash",
             temperature=0.1,
-            google_api_key="AIzaSyCtBa7c1cEWovpXZpIqJ1On8WwQPv5H7hk"
+            google_api_key="AIzaSyCowWFDIENMNDTBtGm5HkvWzeXG9SpIboI"
         )
         result = llm.invoke(prompt)
         answered = "yes" in result.content.lower()
@@ -1265,7 +1608,7 @@ def strategy_adaptation_node(state: ResearchState) -> ResearchState:
         llm = ChatGoogleGenerativeAI(
             model="gemini-2.0-flash",
             temperature=0.4,
-            google_api_key="AIzaSyCtBa7c1cEWovpXZpIqJ1On8WwQPv5H7hk"
+            google_api_key="AIzaSyCowWFDIENMNDTBtGm5HkvWzeXG9SpIboI"
         )
         result = llm.invoke(prompt)
         content = result.content.strip()
@@ -1341,7 +1684,7 @@ def visualization_node(state: ResearchState) -> ResearchState:
             llm = ChatGoogleGenerativeAI(
                 model="gemini-2.0-flash",
                 temperature=0.3,
-                google_api_key="AIzaSyCtBa7c1cEWovpXZpIqJ1On8WwQPv5H7hk"
+                google_api_key="AIzaSyCowWFDIENMNDTBtGm5HkvWzeXG9SpIboI"
             )
             
             # Create Python agent with manual prompt to avoid parsing errors
@@ -2037,6 +2380,11 @@ async def get_index():
                                     <i class="fab fa-google-drive"></i> Google Drive
                                 </button>
                             </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard-panel" type="button" role="tab">
+                                    <i class="fas fa-chart-line"></i> Auto Dashboard
+                                </button>
+                            </li>
                         </ul>
                         
                         <!-- Tab Content -->
@@ -2188,6 +2536,16 @@ async def get_index():
                                     Paste your Google Drive folder URL and load documents directly from your drive. Supports Google Docs, Sheets, and PDFs. The first time you use this feature, you'll need to authorize access to your Google Drive.
                                 </div>
                             </div>
+
+                            <!-- Automatic Dashboard Tab -->
+                            <div class="tab-pane fade" id="dashboard-panel" role="tabpanel">
+                                <div class="alert alert-info" style="background: rgba(102, 126, 234, 0.2); border: 1px solid rgba(102, 126, 234, 0.3); color: white;">
+                                    <i class="fas fa-chart-line me-2"></i>
+                                    <strong>Dashboard Generator</strong><br>
+                                    The dashboard interface is displayed on the right side →<br>
+                                    Upload a CSV file and use the dashboard section to generate visualizations.
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2217,7 +2575,7 @@ async def get_index():
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Chat Input -->
                         <div class="input-group">
                             <input type="text" id="chatInput" class="form-control" placeholder="Ask me anything about your data..." disabled>
@@ -2225,13 +2583,97 @@ async def get_index():
                                 <i class="fas fa-paper-plane"></i>
                             </button>
                         </div>
-                        
+
                         <!-- Loading Indicator -->
                         <div id="loading" class="loading-spinner" style="display: none;">
                             <div class="spinner-border text-primary" role="status">
                                 <span class="visually-hidden">Analyzing...</span>
                             </div>
                             <p class="text-muted mt-3">🤖 AI is analyzing your query...</p>
+                        </div>
+
+                        <!-- Dashboard Section (shown when dashboard tab is active) -->
+                        <div id="dashboardSection" class="h-100 flex-column d-none">
+                            <div class="text-center mb-4">
+                                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px; border-radius: 15px;">
+                                    <i class="fas fa-chart-line fa-4x mb-3" style="color: white;"></i>
+                                    <h3 style="color: white; margin-bottom: 10px;">Automatic Dashboard Generator</h3>
+                                    <p style="color: rgba(255,255,255,0.9); margin-bottom: 25px;">
+                                        Transform your CSV data into a beautiful, interactive dashboard like Tableau or Power BI
+                                    </p>
+                                    <button class="btn btn-light btn-lg" id="generateDashboardBtn" style="padding: 15px 40px; font-size: 18px;">
+                                        <i class="fas fa-magic me-2"></i>Generate Dashboard
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Dashboard Features -->
+                            <div class="row mb-4">
+                                <div class="col-md-3 text-center mb-3">
+                                    <div style="background: rgba(102, 126, 234, 0.1); padding: 20px; border-radius: 10px; height: 100%;">
+                                        <i class="fas fa-tachometer-alt fa-3x mb-3" style="color: #667eea;"></i>
+                                        <h5 style="color: white;">KPI Cards</h5>
+                                        <p class="small text-light">Key metrics at a glance</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 text-center mb-3">
+                                    <div style="background: rgba(56, 239, 125, 0.1); padding: 20px; border-radius: 10px; height: 100%;">
+                                        <i class="fas fa-chart-bar fa-3x mb-3" style="color: #38ef7d;"></i>
+                                        <h5 style="color: white;">Interactive Charts</h5>
+                                        <p class="small text-light">Multiple visualizations</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 text-center mb-3">
+                                    <div style="background: rgba(255, 193, 7, 0.1); padding: 20px; border-radius: 10px; height: 100%;">
+                                        <i class="fas fa-filter fa-3x mb-3" style="color: #ffc107;"></i>
+                                        <h5 style="color: white;">Smart Filters</h5>
+                                        <p class="small text-light">Dynamic data filtering</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 text-center mb-3">
+                                    <div style="background: rgba(255, 65, 108, 0.1); padding: 20px; border-radius: 10px; height: 100%;">
+                                        <i class="fas fa-table fa-3x mb-3" style="color: #ff416c;"></i>
+                                        <h5 style="color: white;">Data Tables</h5>
+                                        <p class="small text-light">Sortable & searchable</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Generated Dashboard Preview -->
+                            <div id="dashboardPreview" style="display: none; flex: 1; min-height: 800px;">
+                                <div class="mb-3 d-flex justify-content-between align-items-center">
+                                    <h5 style="color: white;"><i class="fas fa-eye me-2"></i>Dashboard Preview</h5>
+                                    <div>
+                                        <button class="btn btn-success btn-sm" id="openDashboardBtn">
+                                            <i class="fas fa-external-link-alt me-2"></i>Open in New Tab
+                                        </button>
+                                        <button class="btn btn-primary btn-sm ms-2" id="regenerateDashboardBtn">
+                                            <i class="fas fa-sync-alt me-2"></i>Regenerate
+                                        </button>
+                                    </div>
+                                </div>
+                                <div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); height: 750px;">
+                                    <iframe id="dashboardFrame" style="width: 100%; height: 100%; border: none;"></iframe>
+                                </div>
+                            </div>
+
+                            <!-- Loading State -->
+                            <div id="dashboardLoading" style="display: none; text-align: center; padding: 60px;">
+                                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                                    <span class="visually-hidden">Generating...</span>
+                                </div>
+                                <h5 class="mt-4" style="color: white;">🤖 AI is creating your dashboard...</h5>
+                                <p class="text-light">This may take 30-60 seconds. We're analyzing your data and generating interactive visualizations.</p>
+                            </div>
+
+                            <div class="alert alert-info mt-3" style="background: rgba(56, 239, 125, 0.2); border: 1px solid rgba(56, 239, 125, 0.3); color: white;">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>How it works:</strong><br>
+                                1. Upload a CSV file in the CSV Upload tab<br>
+                                2. Click "Generate Dashboard" to create an interactive dashboard<br>
+                                3. Get professional visualizations with KPIs, charts, filters, and data tables<br>
+                                4. Powered by NVIDIA LLAMA Nemotron AI
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2262,22 +2704,91 @@ async def get_index():
                             currentMode = 'csv';
                             document.getElementById('chatTitle').textContent = 'Chat with your data';
                             updateChatState();
+                            showChatSection();
                         } else if (targetId === '#database-panel') {
                             currentMode = 'database';
                             document.getElementById('chatTitle').textContent = 'Chat with your database';
                             updateChatState();
+                            showChatSection();
                         } else if (targetId === '#research-panel') {
                             currentMode = 'research';
                             document.getElementById('chatTitle').textContent = 'Agentic AI Research';
                             updateChatState();
+                            showChatSection();
                         } else if (targetId === '#google-drive-panel') {
                             currentMode = 'google-drive';
                             document.getElementById('chatTitle').textContent = 'Chat with Google Drive';
                             updateChatState();
+                            showChatSection();
+                        } else if (targetId === '#dashboard-panel') {
+                            currentMode = 'dashboard';
+                            document.getElementById('chatTitle').textContent = 'Automatic Dashboard Generator';
+                            updateChatState();
+                            showDashboardSection();
                         }
                     });
                 });
+
+                // Initialize with chat section visible
+                showChatSection();
             });
+
+            // Function to show chat section and hide dashboard
+            function showChatSection() {
+                const chatContainer = document.getElementById('chatContainer');
+                const chatInput = document.querySelector('.input-group');
+                const loading = document.getElementById('loading');
+                const dashboardSection = document.getElementById('dashboardSection');
+                const clearChatBtn = document.getElementById('clearChat');
+
+                // Show chat elements
+                if (chatContainer) {
+                    chatContainer.classList.remove('d-none');
+                    chatContainer.style.display = 'block';
+                }
+                if (chatInput) {
+                    chatInput.classList.remove('d-none');
+                    chatInput.style.display = 'flex';
+                }
+
+                // Hide dashboard section
+                if (dashboardSection) {
+                    dashboardSection.classList.remove('d-flex');
+                    dashboardSection.classList.add('d-none');
+                }
+
+                if (clearChatBtn && messageCount > 0) clearChatBtn.style.display = 'block';
+            }
+
+            // Function to show dashboard section and hide chat
+            function showDashboardSection() {
+                const chatContainer = document.getElementById('chatContainer');
+                const chatInput = document.querySelector('.input-group');
+                const loading = document.getElementById('loading');
+                const dashboardSection = document.getElementById('dashboardSection');
+                const clearChatBtn = document.getElementById('clearChat');
+
+                // Hide chat elements
+                if (chatContainer) {
+                    chatContainer.classList.add('d-none');
+                    chatContainer.style.display = 'none';
+                }
+                if (chatInput) {
+                    chatInput.classList.add('d-none');
+                    chatInput.style.display = 'none';
+                }
+                if (loading) {
+                    loading.style.display = 'none';
+                }
+
+                // Show dashboard section
+                if (dashboardSection) {
+                    dashboardSection.classList.remove('d-none');
+                    dashboardSection.classList.add('d-flex');
+                }
+
+                if (clearChatBtn) clearChatBtn.style.display = 'none';
+            }
             
             // Update chat input state based on current mode
             function updateChatState() {
@@ -2542,6 +3053,73 @@ async def get_index():
                         loadGoogleDriveBtn.disabled = false;
                         loadGoogleDriveBtn.innerHTML = '<i class="fab fa-google-drive me-2"></i>Load from Google Drive';
                     }
+                });
+            }
+
+            // Dashboard generation handlers
+            let currentDashboardUrl = null;
+
+            const generateDashboardBtn = document.getElementById('generateDashboardBtn');
+            if (generateDashboardBtn) {
+                generateDashboardBtn.addEventListener('click', async function() {
+                    if (!sessionId) {
+                        alert('Please upload a CSV file first in the CSV Upload tab.');
+                        return;
+                    }
+
+                    try {
+                        // Show loading state
+                        document.getElementById('dashboardLoading').style.display = 'block';
+                        document.getElementById('dashboardPreview').style.display = 'none';
+                        generateDashboardBtn.disabled = true;
+
+                        const formData = new FormData();
+                        formData.append('session_id', sessionId);
+
+                        const response = await fetch('/dashboard-generate', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok && data.success) {
+                            currentDashboardUrl = data.dashboard_url;
+
+                            // Show preview
+                            document.getElementById('dashboardLoading').style.display = 'none';
+                            document.getElementById('dashboardPreview').style.display = 'block';
+
+                            // Load dashboard in iframe
+                            document.getElementById('dashboardFrame').src = currentDashboardUrl;
+
+                            showSuccessMessage('Dashboard generated successfully!');
+                        } else {
+                            document.getElementById('dashboardLoading').style.display = 'none';
+                            showErrorMessage(data.message || 'Failed to generate dashboard');
+                        }
+                    } catch (error) {
+                        document.getElementById('dashboardLoading').style.display = 'none';
+                        showErrorMessage('Error generating dashboard: ' + error.message);
+                    } finally {
+                        generateDashboardBtn.disabled = false;
+                    }
+                });
+            }
+
+            const openDashboardBtn = document.getElementById('openDashboardBtn');
+            if (openDashboardBtn) {
+                openDashboardBtn.addEventListener('click', function() {
+                    if (currentDashboardUrl) {
+                        window.open(currentDashboardUrl, '_blank');
+                    }
+                });
+            }
+
+            const regenerateDashboardBtn = document.getElementById('regenerateDashboardBtn');
+            if (regenerateDashboardBtn) {
+                regenerateDashboardBtn.addEventListener('click', function() {
+                    generateDashboardBtn.click();
                 });
             }
 
@@ -3143,6 +3721,48 @@ async def google_drive_load(request: GoogleDriveLoadRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Google Drive load failed: {str(e)}")
 
+@app.post("/dashboard-generate")
+async def generate_dashboard(session_id: str = Form(...)):
+    """Generate an automatic interactive dashboard from uploaded CSV data."""
+    try:
+        # Check session and get DataFrame
+        if session_id not in sessions:
+            raise HTTPException(status_code=400, detail="Session not found. Please upload a CSV file first.")
+
+        session = sessions[session_id]
+        df = session.get('df')
+
+        if df is None or df.empty:
+            raise HTTPException(status_code=400, detail="No valid data found in session. Please upload a CSV file.")
+
+        # Generate dashboard HTML using AutomaticDashboardAgent
+        dashboard_html = AutomaticDashboardAgent(df)
+
+        # Save dashboard HTML to static folder
+        dashboard_id = str(uuid.uuid4())
+        filename = f"dashboard_{session_id}_{dashboard_id}.html"
+        filepath = os.path.join("static", filename)
+
+        with open(filepath, 'w', encoding='utf-8') as f:
+            f.write(dashboard_html)
+
+        dashboard_url = f"/static/{filename}"
+
+        return JSONResponse({
+            "success": True,
+            "dashboard_url": dashboard_url,
+            "message": "Dashboard generated successfully!"
+        })
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        return JSONResponse({
+            "success": False,
+            "error": str(e),
+            "message": f"Failed to generate dashboard: {str(e)}"
+        }, status_code=500)
+
 @app.post("/google-drive-chat", response_model=ChatResponse)
 async def google_drive_chat(request: GoogleDriveQueryRequest):
     """Handle chat queries against Google Drive documents using agentic AI workflow."""
@@ -3243,7 +3863,7 @@ async def chat(request: QueryRequest):
         if df is None or df.empty:
             raise HTTPException(status_code=400, detail="No valid data found in session. Please upload a CSV file.")
 
-        llm_model = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key="AIzaSyCtBa7c1cEWovpXZpIqJ1On8WwQPv5H7hk")
+        llm_model = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key="AIzaSyCowWFDIENMNDTBtGm5HkvWzeXG9SpIboI")
 
         # Convert DataFrame to Excel file temporarily for UnstructuredFileLoader
         import tempfile
@@ -3436,7 +4056,7 @@ async def chat(request: QueryRequest):
                             """
                             
                             # Generate enhanced analysis using Gemini
-                            genai.configure(api_key="AIzaSyCtBa7c1cEWovpXZpIqJ1On8WwQPv5H7hk")
+                            genai.configure(api_key="AIzaSyCowWFDIENMNDTBtGm5HkvWzeXG9SpIboI")
                             model = genai.GenerativeModel("gemini-2.0-flash")
                             gemini_response = model.generate_content(
                                 [analysis_prompt, img_plot],
