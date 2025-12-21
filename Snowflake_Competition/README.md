@@ -92,6 +92,13 @@ A modern web application for healthcare professionals to analyze patient data, p
 sudo apt-get update
 sudo apt-get install -y build-essential gcc g++ python3-dev libssl-dev libffi-dev
 ```
+
+---
+
+## Project Architecture :
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Snowflake_Competition/static/m8.JPG)
+
 ---
 
 ## Project Screenshots :
@@ -109,8 +116,6 @@ sudo apt-get install -y build-essential gcc g++ python3-dev libssl-dev libffi-de
 ![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Snowflake_Competition/static/m6.JPG)
 
 ![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Snowflake_Competition/static/m7.JPG)
-
-![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Snowflake_Competition/static/m8.JPG)
 
 ![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Snowflake_Competition/static/m9.JPG)
 
