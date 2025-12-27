@@ -158,7 +158,7 @@ A specialized OCR (Optical Character Recognition) system fine-tuned on DeepSeek-
 
 ### ☁️ Cloud & Deployment
 - Google Cloud (Cloud Run, Cloud SQL)
-- AWS (DynamoDB, EC2, VPC, Lambda, ECR, Cloud Watch)
+- AWS (DynamoDB, EC2, VPC, Lambda, ECR, Cloud Watch, Bedrock, S3, Sagemaker)
 - Docker
 
 ### ⚡ Data Pipelines & Big Data
