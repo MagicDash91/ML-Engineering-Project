@@ -173,6 +173,10 @@ A specialized OCR (Optical Character Recognition) system fine-tuned on DeepSeek-
 ### 🌐 Backend
 - Celery, Redis
 
+## Badges
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/badge/blob.PNG)
+
 ## 📬 Let’s Connect!
 
 - 💼 [LinkedIn](https://www.linkedin.com/in/michael-wiryaseputra/)
