@@ -175,7 +175,7 @@ A specialized OCR (Optical Character Recognition) system fine-tuned on DeepSeek-
 
 ## Badges
 
-![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/badge/blob.PNG)
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/badge/blob.png)
 
 ## 📬 Let’s Connect!
 
