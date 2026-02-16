@@ -4,6 +4,12 @@ An agentic AI assistant built with **Google ADK**, **LangChain**, and **LangGrap
 
 ---
 
+## Project Screenshots :
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Google_ADK/static/a1.JPG)
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Google_ADK/static/a2.JPG)
+
 ## Features
 
 - **File analysis** — Read and extract text from `.docx`, `.pdf`, `.xlsx`, `.xls`, `.csv`, and plain text files
