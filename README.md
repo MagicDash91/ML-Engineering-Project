@@ -9,6 +9,8 @@ Welcome to my GitHub portfolio! I'm a Machine Learning and Artificial Intelligen
 ### 🧠 Banking Analytics Multi-Agent System
 An AI-powered banking data team built with **CrewAI**, **LangGraph**, **FastAPI**, and **PostgreSQL**. The system orchestrates five specialized agents that automatically profile data, clean and normalize datasets, train machine learning models, generate visualizations, and produce executive-ready PDF and PowerPoint reports — all driven from a browser UI with real-time live logs.
 
+---
+
 ### 💬 Chat With Your Database
 **Tech Stack**: FastAPI, LangChain, SQL, PostgreSQL/MySQL/BigQuery, Docker
 
