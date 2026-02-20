@@ -12,6 +12,8 @@ An AI-powered banking data team built with **CrewAI**, **LangGraph**, **FastAPI*
 
 ![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Bank_Agent/static/b3.JPG)
 
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Bank_Agent/static/b4.JPG)
+
 ---
 
 ## Architecture Overview
