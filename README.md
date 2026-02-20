@@ -9,6 +9,34 @@ Welcome to my GitHub portfolio! I'm a Machine Learning and Artificial Intelligen
 ### 🧠 Banking Analytics Multi-Agent System
 An AI-powered banking data team built with **CrewAI**, **LangGraph**, **FastAPI**, and **PostgreSQL**. The system orchestrates five specialized agents that automatically profile data, clean and normalize datasets, train machine learning models, generate visualizations, and produce executive-ready PDF and PowerPoint reports — all driven from a browser UI with real-time live logs.
 
+#### Agent Responsibilities
+
+| Agent | LLM | Key Tasks |
+|---|---|---|
+| **Chief Data Officer (Manager)** | NVIDIA LLaMA | Delegates work, synthesizes final executive briefing |
+| **Senior Data Engineer** | NVIDIA LLaMA | Profiles table, cleans unused columns, normalizes dtypes, web research |
+| **Senior Data Scientist** | NVIDIA LLaMA | Trains churn / fraud / credit risk models, K-Means segmentation, feature importance charts |
+| **Data Preprocessing Analyst** | NVIDIA LLaMA | Label-encodes all categorical columns → `churn_encoded` table for full-feature heatmap |
+| **Senior Data Analyst** | NVIDIA LLaMA (reasoning) + **Gemini 2.5 Flash** (vision) | Creates visualizations, dashboard, text/PDF/PPT reports |
+
+#### Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Agent orchestration | [CrewAI](https://crewai.com) |
+| Strategic planning | [LangGraph](https://langchain-ai.github.io/langgraph/) |
+| LLM — reasoning & SQL | NVIDIA LLaMA 3.3 Nemotron Super 49B |
+| LLM — chart vision | Google Gemini 2.5 Flash |
+| Web framework | FastAPI + Uvicorn |
+| Data warehouse | PostgreSQL (SQLAlchemy) |
+| ML models | scikit-learn (GradientBoosting, RandomForest, LogisticRegression, KMeans) |
+| Forecasting | statsmodels (Holt-Winters Exponential Smoothing) |
+| Visualization | Seaborn + Matplotlib |
+| Report generation | ReportLab (PDF), python-pptx (PowerPoint) |
+| Observability | LangSmith tracing |
+| Web search | Tavily |
+| Market data | yfinance |
+
 ---
 
 ### 💬 Chat With Your Database
