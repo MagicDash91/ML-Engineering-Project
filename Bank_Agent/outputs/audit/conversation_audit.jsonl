@@ -1,0 +1,7 @@
+{"timestamp": "2026-02-24T12:27:31.085007", "task_id": "de9cdd35-af45-4a18-99ba-607b121d1bbe", "input_len": 284, "flags": ["guardrail_violation"], "blocked": true, "output_len": 0}
+{"timestamp": "2026-02-24T12:28:00.373245", "task_id": "de9cdd35-af45-4a18-99ba-607b121d1bbe", "input_len": 77, "flags": [], "blocked": false, "output_len": 3229}
+{"timestamp": "2026-02-24T12:28:47.629225", "task_id": "de9cdd35-af45-4a18-99ba-607b121d1bbe", "input_len": 134, "flags": ["sql_injection"], "blocked": true, "output_len": 0}
+{"timestamp": "2026-02-25T07:23:42.037518", "task_id": "de9cdd35-af45-4a18-99ba-607b121d1bbe", "input_len": 7, "flags": [], "blocked": false, "output_len": 274}
+{"timestamp": "2026-02-26T12:44:39.272106", "task_id": "d110ac7a-3dfe-4c67-bf74-315b7814ed4d", "input_len": 58, "flags": [], "blocked": false, "output_len": 479}
+{"timestamp": "2026-02-26T12:47:36.181819", "task_id": "d110ac7a-3dfe-4c67-bf74-315b7814ed4d", "input_len": 62, "flags": [], "blocked": false, "output_len": 1169}
+{"timestamp": "2026-02-26T12:48:14.956197", "task_id": "d110ac7a-3dfe-4c67-bf74-315b7814ed4d", "input_len": 56, "flags": [], "blocked": false, "output_len": 2372}
