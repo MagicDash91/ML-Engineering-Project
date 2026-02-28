@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Digital Marketing Agent</title>
+
+<!-- Bootstrap 5 dark -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"/>
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+<!-- highlight.js -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css"/>
+
+<style>
+:root{
+  --bg-base:#0d1117;--bg-card:#161b22;--bg-sidebar:#0d1117;
+  --border:#30363d;--accent:#1a73e8;--accent2:#34a853;
+  --text-primary:#e6edf3;--text-muted:#8b949e;
+  --log-info:#58a6ff;--log-warn:#d29922;--log-error:#f85149;--log-ok:#3fb950;
+}
+*{box-sizing:border-box;}
+body{background:var(--bg-base);color:var(--text-primary);font-family:'Segoe UI',system-ui,sans-serif;margin:0;display:flex;height:100vh;overflow:hidden;}
+
+/* ── Sidebar ── */
+#sidebar{width:320px;min-width:280px;background:var(--bg-sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;}
+.sidebar-header{padding:20px 16px 12px;border-bottom:1px solid var(--border);}
+.sidebar-header h1{font-size:1.15rem;font-weight:700;color:var(--text-primary);margin:0;}
+.sidebar-header small{color:var(--text-muted);font-size:.75rem;}
+.sidebar-body{padding:14px;flex:1;}
+.form-label{font-size:.8rem;color:var(--text-muted);margin-bottom:4px;}
+.form-control,.form-select{background:#1c2128;border:1px solid var(--border);color:var(--text-primary);font-size:.85rem;border-radius:6px;}
+.form-control:focus,.form-select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,115,232,.2);background:#1c2128;color:var(--text-primary);}
+.btn-launch{background:var(--accent);border:none;color:#fff;font-weight:600;font-size:.9rem;border-radius:6px;padding:10px;width:100%;}
+.btn-launch:hover{background:#1558b0;}
+.btn-launch:disabled{opacity:.5;cursor:not-allowed;}
+.agent-legend{padding:10px 14px 16px;border-top:1px solid var(--border);}
+.agent-badge{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:.78rem;color:var(--text-muted);}
+.agent-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+/* ── Main area ── */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+
+/* ── Status bar ── */
+#statusbar{background:var(--bg-card);border-bottom:1px solid var(--border);padding:6px 16px;display:flex;align-items:center;gap:12px;font-size:.8rem;}
+#status-badge{padding:2px 10px;border-radius:12px;font-weight:600;background:#30363d;color:var(--text-muted);}
+#status-badge.running{background:#1a3a5c;color:var(--log-info);}
+#status-badge.awaiting{background:#3a2a00;color:var(--log-warn);}
+#status-badge.completed{background:#1a3a1a;color:var(--log-ok);}
+#status-badge.failed{background:#3a1a1a;color:var(--log-error);}
+
+/* ── Nav tabs ── */
+.nav-tabs{border-bottom:1px solid var(--border);background:var(--bg-card);padding:0 12px;}
+.nav-tabs .nav-link{color:var(--text-muted);border:none;border-bottom:2px solid transparent;padding:10px 16px;font-size:.85rem;}
+.nav-tabs .nav-link:hover{color:var(--text-primary);}
+.nav-tabs .nav-link.active{color:var(--accent);border-bottom-color:var(--accent);background:transparent;}
+
+/* ── Tab content ── */
+.tab-content{flex:1;overflow:hidden;}
+.tab-pane{height:100%;overflow-y:auto;padding:16px;}
+
+/* ── Console ── */
+#console-output{background:#0d1117;border:1px solid var(--border);border-radius:6px;padding:12px;font-family:'Courier New',monospace;font-size:.78rem;min-height:300px;max-height:calc(100vh - 180px);overflow-y:auto;}
+.log-line{padding:2px 0;line-height:1.5;}
+.log-info{color:var(--log-info);}
+.log-warn{color:var(--log-warn);}
+.log-ok{color:var(--log-ok);}
+.log-error{color:var(--log-error);}
+.log-default{color:var(--text-primary);}
+.log-ts{color:var(--text-muted);margin-right:8px;}
+
+/* ── Report ── */
+#md-body{padding:8px 4px;}
+#md-body h1,#md-body h2,#md-body h3{color:var(--accent);}
+#md-body h2{border-bottom:1px solid var(--border);padding-bottom:6px;}
+#md-body code{background:#1c2128;padding:2px 6px;border-radius:4px;font-size:.85em;}
+#md-body pre{background:#1c2128;padding:14px;border-radius:6px;overflow-x:auto;}
+#md-body table{width:100%;border-collapse:collapse;margin:12px 0;}
+#md-body th{background:var(--bg-card);color:var(--accent);padding:8px 12px;text-align:left;border:1px solid var(--border);}
+#md-body td{padding:7px 12px;border:1px solid var(--border);}
+#md-body tr:nth-child(even){background:#1c2128;}
+#md-body blockquote{border-left:3px solid var(--accent);padding:8px 14px;color:var(--text-muted);margin:8px 0;}
+
+/* ── Content tab ── */
+.video-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:24px;}
+.video-card{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.video-card video{width:100%;display:block;}
+.video-meta{padding:10px;font-size:.8rem;color:var(--text-muted);}
+.posts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-bottom:24px;}
+.post-card{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px;}
+.post-platform{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--accent);margin-bottom:6px;}
+.post-text{font-size:.83rem;line-height:1.5;color:var(--text-primary);white-space:pre-wrap;}
+.hashtag{color:var(--accent2);font-size:.78rem;}
+.content-section-title{font-size:1rem;font-weight:700;color:var(--text-primary);margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+
+/* ── Downloads ── */
+.download-card{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.download-icon{font-size:1.8rem;width:36px;text-align:center;}
+.download-info{flex:1;}
+.download-name{font-size:.85rem;font-weight:600;color:var(--text-primary);}
+.download-meta{font-size:.75rem;color:var(--text-muted);}
+.btn-download{background:var(--accent);color:#fff;border:none;border-radius:5px;padding:5px 14px;font-size:.8rem;text-decoration:none;}
+.btn-download:hover{background:#1558b0;color:#fff;}
+
+/* ── Chat ── */
+#chat-messages{min-height:250px;max-height:calc(100vh - 340px);overflow-y:auto;padding:4px;}
+.chat-bubble{max-width:80%;padding:10px 14px;border-radius:10px;margin-bottom:10px;font-size:.85rem;line-height:1.5;}
+.bubble-user{background:var(--accent);color:#fff;margin-left:auto;border-radius:10px 10px 2px 10px;}
+.bubble-assistant{background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border);border-radius:10px 10px 10px 2px;}
+.bubble-system{background:#1a2a1a;color:var(--log-warn);border:1px solid #3a3a00;border-radius:8px;font-size:.8rem;font-style:italic;}
+.security-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px;}
+.sec-badge{font-size:.65rem;padding:2px 8px;border-radius:10px;font-weight:600;}
+.sec-pii{background:#1a3a1a;color:var(--log-ok);}
+.sec-sql{background:#3a1a1a;color:var(--log-error);}
+.sec-guard{background:#3a2a00;color:var(--log-warn);}
+.sec-audit{background:#1a2a3a;color:var(--log-info);}
+.typing-indicator{color:var(--text-muted);font-size:.8rem;font-style:italic;padding:4px 0;}
+.chat-input-wrap{border-top:1px solid var(--border);padding-top:12px;margin-top:8px;}
+
+/* ── HITL Modal ── */
+.modal-content{background:var(--bg-card);border:1px solid var(--border);}
+.modal-header{border-bottom:1px solid var(--border);}
+.modal-footer{border-top:1px solid var(--border);}
+.hitl-preview{background:#0d1117;border:1px solid var(--border);border-radius:6px;padding:14px;max-height:300px;overflow-y:auto;font-size:.82rem;color:var(--text-primary);white-space:pre-wrap;}
+#hitl-countdown{font-size:1.3rem;font-weight:700;color:var(--log-warn);}
+.btn-approve{background:var(--accent2);border:none;color:#fff;font-weight:600;}
+.btn-approve:hover{background:#2a8a43;color:#fff;}
+.btn-abort{background:#c0392b;border:none;color:#fff;font-weight:600;}
+.btn-abort:hover{background:#a93226;color:#fff;}
+
+/* ── Loading spinner ── */
+.spinner-sm{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;margin-right:6px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── Empty state ── */
+.empty-state{text-align:center;color:var(--text-muted);padding:48px 24px;}
+.empty-state i{font-size:2.5rem;margin-bottom:12px;opacity:.4;}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════ SIDEBAR ══════════════════════════════ -->
+<div id="sidebar">
+  <div class="sidebar-header">
+    <h1><i class="fa-solid fa-bullhorn me-2" style="color:var(--accent)"></i>Digital Marketing Agent</h1>
+    <small>Gemini 2.5 Flash · Veo 3 · LangGraph · CrewAI</small>
+  </div>
+
+  <div class="sidebar-body">
+    <div class="mb-3">
+      <label class="form-label">Brand Name *</label>
+      <input id="f-brand" type="text" class="form-control" placeholder="e.g. Nike, Airbnb…"/>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Industry *</label>
+      <input id="f-industry" type="text" class="form-control" placeholder="e.g. Fashion, SaaS, F&B…"/>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Target Audience *</label>
+      <input id="f-audience" type="text" class="form-control" placeholder="e.g. Millennials aged 25-35…"/>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Campaign Goals *</label>
+      <textarea id="f-goals" class="form-control" rows="3" placeholder="e.g. Increase brand awareness by 30%, generate 500 leads/month…"></textarea>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Budget</label>
+      <input id="f-budget" type="text" class="form-control" placeholder="e.g. $50,000/month"/>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Competitors</label>
+      <input id="f-competitors" type="text" class="form-control" placeholder="e.g. Adidas, Puma, Under Armour"/>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Campaign Type</label>
+      <select id="f-type" class="form-select">
+        <option>Brand Awareness</option>
+        <option>Lead Generation</option>
+        <option>Sales</option>
+        <option>Engagement</option>
+      </select>
+    </div>
+
+    <button id="btn-launch" class="btn-launch mb-2" onclick="launchCampaign()">
+      <i class="fa-solid fa-rocket me-2"></i>Launch Campaign
+    </button>
+    <button class="btn btn-outline-secondary btn-sm w-100" onclick="clearAll()">
+      <i class="fa-solid fa-rotate-left me-1"></i>Clear
+    </button>
+  </div>
+
+  <div class="agent-legend">
+    <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:6px;">Agent Team</div>
+    <div class="agent-badge"><div class="agent-dot" style="background:#1a73e8"></div>CMO / Manager</div>
+    <div class="agent-badge"><div class="agent-dot" style="background:#34a853"></div>Market Researcher</div>
+    <div class="agent-badge"><div class="agent-dot" style="background:#fbbc04"></div>Marketing Strategist</div>
+    <div class="agent-badge"><div class="agent-dot" style="background:#ea4335"></div>Content Maker + Veo 3</div>
+    <div style="margin-top:8px;font-size:.7rem;color:var(--text-muted)">LangGraph → HITL → CrewAI</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ MAIN AREA ══════════════════════════════ -->
+<div id="main">
+  <!-- Status bar -->
+  <div id="statusbar">
+    <span id="status-badge">Idle</span>
+    <span id="status-text" style="color:var(--text-muted)">Fill in the form and click Launch Campaign.</span>
+    <span id="status-spinner" style="display:none"><span class="spinner-sm"></span></span>
+  </div>
+
+  <!-- Tabs -->
+  <ul class="nav nav-tabs" id="mainTabs">
+    <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tab-console"><i class="fa-solid fa-terminal me-1"></i>Console</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-report"><i class="fa-solid fa-file-lines me-1"></i>Report</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-content"><i class="fa-solid fa-photo-film me-1"></i>Content</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-downloads"><i class="fa-solid fa-download me-1"></i>Downloads</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-chat"><i class="fa-solid fa-comments me-1"></i>Conversation</a></li>
+  </ul>
+
+  <div class="tab-content" style="flex:1;overflow:hidden;">
+
+    <!-- Console tab -->
+    <div class="tab-pane fade show active h-100" id="tab-console">
+      <div id="console-output">
+        <div class="log-default" style="color:var(--text-muted)">Waiting for campaign to start…</div>
+      </div>
+    </div>
+
+    <!-- Report tab -->
+    <div class="tab-pane fade h-100" id="tab-report">
+      <div id="report-downloads" style="display:none;margin-bottom:12px;"></div>
+      <div id="md-body">
+        <div class="empty-state"><i class="fa-solid fa-file-lines"></i><p>Executive brief will appear here after analysis completes.</p></div>
+      </div>
+    </div>
+
+    <!-- Content tab -->
+    <div class="tab-pane fade h-100" id="tab-content">
+      <div id="content-area">
+        <div class="empty-state"><i class="fa-solid fa-photo-film"></i><p>Videos, social posts, and ad copy will appear here.</p></div>
+      </div>
+    </div>
+
+    <!-- Downloads tab -->
+    <div class="tab-pane fade h-100" id="tab-downloads">
+      <div id="downloads-area">
+        <div class="empty-state"><i class="fa-solid fa-download"></i><p>Generated PDF, PPTX, Markdown, and MP4 files will appear here.</p></div>
+      </div>
+    </div>
+
+    <!-- Chat tab -->
+    <div class="tab-pane fade h-100" id="tab-chat">
+      <!-- Security badges -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+        <span class="sec-badge sec-pii"><i class="fa-solid fa-shield-halved me-1"></i>PII Redaction</span>
+        <span class="sec-badge sec-sql"><i class="fa-solid fa-database me-1"></i>SQL Guard</span>
+        <span class="sec-badge sec-guard"><i class="fa-solid fa-lock me-1"></i>Guardrails</span>
+        <span class="sec-badge sec-audit"><i class="fa-solid fa-scroll me-1"></i>Audit Log</span>
+      </div>
+      <div id="chat-messages"></div>
+      <div class="chat-input-wrap">
+        <div class="input-group">
+          <input id="chat-input" type="text" class="form-control"
+                 placeholder="Ask about your campaign… e.g. What channels are recommended?"
+                 onkeydown="if(event.key==='Enter')sendChat()"/>
+          <button class="btn btn-primary" onclick="sendChat()">
+            <i class="fa-solid fa-paper-plane"></i>
+          </button>
+        </div>
+        <div id="typing-indicator" class="typing-indicator" style="display:none">Gemini is thinking…</div>
+      </div>
+    </div>
+
+  </div><!-- /tab-content -->
+</div><!-- /main -->
+
+<!-- ══════════════════════════════ HITL MODAL ══════════════════════════════ -->
+<div class="modal fade" id="hitlModal" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fa-solid fa-pause-circle me-2" style="color:var(--log-warn)"></i>
+          Human-in-the-Loop Review
+        </h5>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-warning py-2" style="font-size:.85rem;">
+          <i class="fa-solid fa-clock me-1"></i>
+          Phase 1 (LangGraph) is complete. Review the preliminary brief below, then Approve to start Phase 2 (CrewAI).
+          Auto-approves in <strong id="hitl-countdown">600</strong>s.
+        </div>
+        <div class="hitl-preview" id="hitl-brief">Loading…</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-abort" onclick="respondHitl(true)">
+          <i class="fa-solid fa-ban me-1"></i>Abort Campaign
+        </button>
+        <button class="btn btn-approve" onclick="respondHitl(false)">
+          <i class="fa-solid fa-check me-1"></i>Approve – Start Phase 2
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap JS + marked + highlight -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+<script>
+// ── State ────────────────────────────────────────────────────────────────────
+let currentTaskId  = null;
+let sseSource      = null;
+let hitlTimer      = null;
+let hitlModalObj   = null;
+let chatTurnCount  = 0;
+
+// ── marked config ─────────────────────────────────────────────────────────────
+marked.setOptions({ breaks: true, gfm: true });
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function _esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function setStatus(text, cls){
+  const b = document.getElementById('status-badge');
+  b.textContent = text;
+  b.className   = '';
+  if(cls) b.classList.add(cls);
+  const sp = document.getElementById('status-spinner');
+  sp.style.display = (cls==='running'||cls==='awaiting') ? 'inline' : 'none';
+}
+
+function appendLog(entry){
+  const out  = document.getElementById('console-output');
+  const msg  = entry.message || '';
+  let   cls  = 'log-default';
+  if(/error|fail|exception/i.test(msg))  cls='log-error';
+  else if(/warn/i.test(msg))             cls='log-warn';
+  else if(/✓|complete|done|saved/i.test(msg)) cls='log-ok';
+  else if(/\[/i.test(msg))               cls='log-info';
+
+  const ts   = new Date(entry.timestamp||Date.now()).toLocaleTimeString();
+  const line = document.createElement('div');
+  line.className = `log-line ${cls}`;
+  line.innerHTML = `<span class="log-ts">${_esc(ts)}</span>${_esc(msg)}`;
+  out.appendChild(line);
+  out.scrollTop = out.scrollHeight;
+}
+
+// ── Launch ────────────────────────────────────────────────────────────────────
+async function launchCampaign(){
+  const brand     = document.getElementById('f-brand').value.trim();
+  const industry  = document.getElementById('f-industry').value.trim();
+  const audience  = document.getElementById('f-audience').value.trim();
+  const goals     = document.getElementById('f-goals').value.trim();
+
+  if(!brand||!industry||!audience||!goals){
+    alert('Please fill in Brand Name, Industry, Target Audience, and Campaign Goals.');
+    return;
+  }
+
+  const btn = document.getElementById('btn-launch');
+  btn.disabled = true;
+
+  // clear console
+  document.getElementById('console-output').innerHTML = '';
+  document.getElementById('md-body').innerHTML = '<div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i><p>Analysing…</p></div>';
+
+  const body = {
+    brand_name:      brand,
+    industry:        industry,
+    target_audience: audience,
+    campaign_goals:  goals,
+    budget:          document.getElementById('f-budget').value.trim() || 'Not specified',
+    competitors:     document.getElementById('f-competitors').value.trim() || 'Not specified',
+    campaign_type:   document.getElementById('f-type').value,
+  };
+
+  try {
+    const res  = await fetch('/api/analyze', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+    const data = await res.json();
+    currentTaskId = data.task_id;
+    setStatus('Running', 'running');
+    document.getElementById('status-text').textContent = `Campaign: ${brand} | Task ${currentTaskId.slice(0,8)}`;
+    connectSSE(currentTaskId);
+  } catch(e){
+    alert('Failed to start: ' + e.message);
+    btn.disabled = false;
+  }
+}
+
+// ── SSE connection ────────────────────────────────────────────────────────────
+function connectSSE(taskId){
+  if(sseSource){ sseSource.close(); }
+  sseSource = new EventSource(`/api/stream/${taskId}`);
+
+  sseSource.onmessage = (ev) => {
+    let data;
+    try { data = JSON.parse(ev.data); } catch{ return; }
+
+    if(data.type === 'heartbeat') return;
+    if(data.type === 'hitl_pause'){ showHitlModal(data); return; }
+    if(data.type === 'complete'){   onComplete(taskId);  return; }
+    if(data.type === 'aborted'){    onAborted();         return; }
+    if(data.type === 'error'){      onError(data.message); return; }
+
+    appendLog(data);
+
+    // update status badge during hitl wait
+    if(data.type === 'hitl_wait') setStatus('Awaiting Approval', 'awaiting');
+  };
+
+  sseSource.onerror = () => {
+    // SSE closed – check final status
+    if(currentTaskId) pollFinalStatus(currentTaskId);
+  };
+}
+
+async function pollFinalStatus(taskId){
+  try {
+    const res  = await fetch(`/api/status/${taskId}`);
+    const data = await res.json();
+    if(data.status === 'completed') onComplete(taskId);
+    else if(data.status === 'failed') onError('Task failed');
+    else if(data.status === 'aborted') onAborted();
+  } catch {}
+}
+
+// ── HITL modal ────────────────────────────────────────────────────────────────
+let _hitlTaskId = null;
+
+function showHitlModal(data){
+  _hitlTaskId = data.task_id;
+  setStatus('Awaiting Approval', 'awaiting');
+
+  const brief = data.preliminary_report || data.plan_preview || 'No preview available.';
+  document.getElementById('hitl-brief').textContent = brief;
+
+  hitlModalObj = new bootstrap.Modal(document.getElementById('hitlModal'));
+  hitlModalObj.show();
+
+  // countdown
+  let secs = data.auto_approve_secs || 600;
+  document.getElementById('hitl-countdown').textContent = secs;
+  hitlTimer = setInterval(() => {
+    secs--;
+    document.getElementById('hitl-countdown').textContent = secs;
+    if(secs <= 0){
+      clearInterval(hitlTimer);
+      hitlModalObj.hide();
+    }
+  }, 1000);
+}
+
+async function respondHitl(abort){
+  clearInterval(hitlTimer);
+  if(hitlModalObj) hitlModalObj.hide();
+
+  if(!_hitlTaskId) return;
+  try {
+    await fetch(`/api/approve/${_hitlTaskId}`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ abort }),
+    });
+  } catch(e){ console.error(e); }
+
+  if(!abort){
+    setStatus('Running', 'running');
+    appendLog({ type:'log', message:'✓ Phase 2 approved – starting CrewAI agents…', timestamp: new Date().toISOString() });
+  }
+}
+
+// ── On complete ────────────────────────────────────────────────────────────────
+async function onComplete(taskId){
+  setStatus('Completed', 'completed');
+  document.getElementById('btn-launch').disabled = false;
+  if(sseSource){ sseSource.close(); sseSource=null; }
+
+  appendLog({ type:'log', message:'═══ Analysis complete – loading results ═══', timestamp: new Date().toISOString() });
+
+  try {
+    const res  = await fetch(`/api/results/${taskId}`);
+    const data = await res.json();
+    renderReport(data.enhanced_report || data.markdown_report);
+    renderContent(data.content_items || [], data.videos || []);
+    renderDownloads(data.reports || [], data.videos || []);
+  } catch(e){ console.error(e); }
+}
+
+function onError(msg){
+  setStatus('Failed', 'failed');
+  document.getElementById('btn-launch').disabled = false;
+  appendLog({ type:'log', message:`ERROR: ${msg}`, timestamp: new Date().toISOString() });
+}
+
+function onAborted(){
+  setStatus('Aborted', 'failed');
+  document.getElementById('btn-launch').disabled = false;
+  appendLog({ type:'log', message:'Campaign aborted by user.', timestamp: new Date().toISOString() });
+}
+
+// ── Render report ──────────────────────────────────────────────────────────────
+function renderReport(markdown){
+  const body = document.getElementById('md-body');
+  if(!markdown){ body.innerHTML='<div class="empty-state"><p>No report generated.</p></div>'; return; }
+  body.innerHTML = marked.parse(markdown);
+  body.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
+
+  // Show download buttons
+  const dl = document.getElementById('report-downloads');
+  dl.style.display = 'block';
+  dl.innerHTML = '<a href="#tab-downloads" data-bs-toggle="tab" class="btn btn-sm btn-outline-primary me-2"><i class="fa-solid fa-download me-1"></i>Download Files</a>';
+}
+
+// ── Render content tab ────────────────────────────────────────────────────────
+function renderContent(items, videos){
+  const area = document.getElementById('content-area');
+  if(!items.length && !videos.length){
+    area.innerHTML='<div class="empty-state"><i class="fa-solid fa-photo-film"></i><p>No content items generated.</p></div>';
+    return;
+  }
+
+  let html = '';
+
+  // Videos
+  const videoItems = items.filter(i=>i.type==='video');
+  const allVideos  = [...new Set([...videoItems.map(i=>i.video_url), ...videos])].filter(Boolean);
+  if(allVideos.length){
+    html += '<div class="content-section-title"><i class="fa-solid fa-film me-2" style="color:#ea4335"></i>AI Generated Videos (Veo 3)</div>';
+    html += '<div class="video-grid">';
+    allVideos.forEach(url => {
+      const name = url.split('/').pop();
+      html += `<div class="video-card">
+        <video controls preload="metadata"><source src="${_esc(url)}" type="video/mp4"/>Your browser does not support video.</video>
+        <div class="video-meta">${_esc(name)}</div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  // Social Posts
+  const posts = items.filter(i=>i.type==='social_post');
+  if(posts.length){
+    html += '<div class="content-section-title"><i class="fa-brands fa-instagram me-2" style="color:#e1306c"></i>Social Media Posts</div>';
+    html += '<div class="posts-grid">';
+    posts.forEach(p => {
+      let postContent = '';
+      try {
+        const parsed = JSON.parse(p.content);
+        if(Array.isArray(parsed)){
+          parsed.slice(0,3).forEach(post => {
+            postContent += `<div class="post-text mb-2">${_esc(post.post||'')}</div>`;
+            if(post.hashtags) postContent += `<div class="hashtag">${post.hashtags.map(h=>'#'+h).join(' ')}</div>`;
+          });
+        } else { postContent = `<div class="post-text">${_esc(p.content)}</div>`; }
+      } catch { postContent = `<div class="post-text">${_esc(p.content)}</div>`; }
+
+      html += `<div class="post-card">
+        <div class="post-platform">${_esc(p.platform||'Social')}</div>
+        ${postContent}
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  // Ad Copy
+  const adCopies = items.filter(i=>i.type==='ad_copy');
+  if(adCopies.length){
+    html += '<div class="content-section-title"><i class="fa-solid fa-ad me-2" style="color:#fbbc04"></i>Ad Copy</div>';
+    adCopies.forEach((ad, idx) => {
+      const colId = `adcopy-${idx}`;
+      html += `<div class="mb-2">
+        <button class="btn btn-sm btn-outline-secondary w-100 text-start"
+                data-bs-toggle="collapse" data-bs-target="#${colId}">
+          <i class="fa-solid fa-chevron-right me-2"></i>${_esc(ad.title||ad.platform||'Ad Copy')}
+        </button>
+        <div class="collapse" id="${colId}">
+          <div class="post-card mt-1"><pre style="white-space:pre-wrap;font-size:.8rem;color:var(--text-primary);margin:0">${_esc(ad.content)}</pre></div>
+        </div>
+      </div>`;
+    });
+  }
+
+  // Email Templates
+  const emails = items.filter(i=>i.type==='email');
+  if(emails.length){
+    html += '<div class="content-section-title"><i class="fa-solid fa-envelope me-2" style="color:#34a853"></i>Email Templates</div>';
+    emails.forEach((em, idx) => {
+      const colId = `email-${idx}`;
+      html += `<div class="mb-2">
+        <button class="btn btn-sm btn-outline-secondary w-100 text-start"
+                data-bs-toggle="collapse" data-bs-target="#${colId}">
+          <i class="fa-solid fa-chevron-right me-2"></i>${_esc(em.title||'Email Template')}
+        </button>
+        <div class="collapse" id="${colId}">
+          <div class="post-card mt-1">
+            ${em.content.includes('<html')||em.content.includes('<body')
+              ? `<iframe srcdoc="${_esc(em.content)}" style="width:100%;height:400px;border:none;background:#fff"></iframe>`
+              : `<pre style="white-space:pre-wrap;font-size:.8rem;color:var(--text-primary);margin:0">${_esc(em.content)}</pre>`
+            }
+          </div>
+        </div>
+      </div>`;
+    });
+  }
+
+  area.innerHTML = html || '<div class="empty-state"><p>No content items found.</p></div>';
+}
+
+// ── Render downloads ──────────────────────────────────────────────────────────
+async function renderDownloads(reports, videos){
+  const area = document.getElementById('downloads-area');
+  let html   = '';
+
+  if(reports.length){
+    html += '<div class="content-section-title"><i class="fa-solid fa-file me-2"></i>Reports</div>';
+    for(const url of reports){
+      const name = url.split('/').pop();
+      const ext  = name.split('.').pop().toUpperCase();
+      const icon = ext==='PDF'?'📄':ext==='PPTX'?'📊':'📝';
+      html += `<div class="download-card">
+        <div class="download-icon">${icon}</div>
+        <div class="download-info">
+          <div class="download-name">${_esc(name)}</div>
+          <div class="download-meta">${ext} Report</div>
+        </div>
+        <a href="${_esc(url)}" download class="btn-download"><i class="fa-solid fa-download me-1"></i>Download</a>
+      </div>`;
+    }
+  }
+
+  if(videos.length){
+    html += '<div class="content-section-title mt-3"><i class="fa-solid fa-film me-2"></i>Videos</div>';
+    for(const url of videos){
+      const name = url.split('/').pop();
+      html += `<div class="download-card">
+        <div class="download-icon">🎬</div>
+        <div class="download-info">
+          <div class="download-name">${_esc(name)}</div>
+          <div class="download-meta">MP4 Video</div>
+        </div>
+        <a href="${_esc(url)}" download class="btn-download"><i class="fa-solid fa-download me-1"></i>Download</a>
+      </div>`;
+    }
+  }
+
+  // also fetch from API to catch files generated in previous runs
+  try {
+    const [rRes, vRes] = await Promise.all([fetch('/api/reports'), fetch('/api/videos')]);
+    const apiReports   = await rRes.json();
+    const apiVideos    = await vRes.json();
+
+    if(apiReports.length && !reports.length){
+      html += '<div class="content-section-title"><i class="fa-solid fa-file me-2"></i>All Reports</div>';
+      apiReports.forEach(r => {
+        html += `<div class="download-card">
+          <div class="download-icon">${r.icon||'📄'}</div>
+          <div class="download-info">
+            <div class="download-name">${_esc(r.name)}</div>
+            <div class="download-meta">${r.type} · ${r.size_kb} KB</div>
+          </div>
+          <a href="${_esc(r.url)}" download class="btn-download"><i class="fa-solid fa-download me-1"></i>Download</a>
+        </div>`;
+      });
+    }
+  } catch {}
+
+  area.innerHTML = html || '<div class="empty-state"><i class="fa-solid fa-download"></i><p>No files to download yet.</p></div>';
+}
+
+// ── Chat ──────────────────────────────────────────────────────────────────────
+async function sendChat(){
+  if(!currentTaskId){ alert('Start a campaign first.'); return; }
+
+  const input = document.getElementById('chat-input');
+  const msg   = input.value.trim();
+  if(!msg) return;
+  input.value = '';
+
+  appendChatMsg('user', msg, []);
+
+  document.getElementById('typing-indicator').style.display = 'block';
+
+  try {
+    const res  = await fetch(`/api/chat/${currentTaskId}`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ message: msg }),
+    });
+    const data = await res.json();
+    appendChatMsg('assistant', data.reply, data.security_flags||[]);
+    chatTurnCount++;
+  } catch(e){
+    appendChatMsg('assistant', `Error: ${e.message}`, []);
+  } finally {
+    document.getElementById('typing-indicator').style.display = 'none';
+  }
+}
+
+function appendChatMsg(role, text, flags){
+  const wrap = document.getElementById('chat-messages');
+  const div  = document.createElement('div');
+  div.style.display = 'flex';
+  div.style.flexDirection = 'column';
+  div.style.alignItems = role==='user' ? 'flex-end' : 'flex-start';
+  div.style.marginBottom = '10px';
+
+  const bubble = document.createElement('div');
+  bubble.className = `chat-bubble bubble-${role}`;
+  bubble.textContent = text;
+  div.appendChild(bubble);
+
+  if(flags && flags.length){
+    const badgeRow = document.createElement('div');
+    badgeRow.className = 'security-badges';
+    flags.forEach(f => {
+      const sp = document.createElement('span');
+      sp.className = 'sec-badge ' + (
+        f.includes('PII')  ? 'sec-pii' :
+        f.includes('SQL')  ? 'sec-sql' :
+        f.includes('Guard')? 'sec-guard' : 'sec-audit'
+      );
+      sp.textContent = f;
+      badgeRow.appendChild(sp);
+    });
+    div.appendChild(badgeRow);
+  }
+
+  wrap.appendChild(div);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+// ── Clear ──────────────────────────────────────────────────────────────────────
+function clearAll(){
+  if(sseSource){ sseSource.close(); sseSource=null; }
+  currentTaskId = null;
+  chatTurnCount = 0;
+  document.getElementById('console-output').innerHTML = '<div class="log-default" style="color:var(--text-muted)">Cleared.</div>';
+  document.getElementById('md-body').innerHTML = '<div class="empty-state"><i class="fa-solid fa-file-lines"></i><p>Executive brief will appear here after analysis completes.</p></div>';
+  document.getElementById('content-area').innerHTML = '<div class="empty-state"><i class="fa-solid fa-photo-film"></i><p>Videos, social posts, and ad copy will appear here.</p></div>';
+  document.getElementById('downloads-area').innerHTML = '<div class="empty-state"><i class="fa-solid fa-download"></i><p>Generated files will appear here.</p></div>';
+  document.getElementById('chat-messages').innerHTML = '';
+  document.getElementById('btn-launch').disabled = false;
+  setStatus('Idle', '');
+  document.getElementById('status-text').textContent = 'Fill in the form and click Launch Campaign.';
+}
+
+// ── On load: refresh downloads ────────────────────────────────────────────────
+window.addEventListener('load', () => renderDownloads([], []));
+</script>
+</body>
+</html>
