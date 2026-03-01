@@ -1,0 +1,4 @@
+{"timestamp": "2026-03-01T16:11:23.616035", "task_id": "6667ade0-b8ba-4cad-bf9e-505954540545", "flags": ["guardrail_violation"], "blocked": true}
+{"timestamp": "2026-03-01T16:11:52.097193", "task_id": "6667ade0-b8ba-4cad-bf9e-505954540545", "flags": ["sql_injection"], "blocked": true}
+{"timestamp": "2026-03-01T16:12:24.296585", "task_id": "6667ade0-b8ba-4cad-bf9e-505954540545", "input_len": 42, "flags": [], "blocked": false, "output_len": 379}
+{"timestamp": "2026-03-01T16:12:51.811713", "task_id": "6667ade0-b8ba-4cad-bf9e-505954540545", "input_len": 55, "flags": [], "blocked": false, "output_len": 388}
