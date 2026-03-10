@@ -8,25 +8,25 @@ Built with **LangGraph**, **CrewAI**, **FastAPI**, and a **Bootstrap 5 dark UI**
 
 ## Screenshots
 
-![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Digital_Marketing_Agent/static/b1.JPG)
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Bank_Analytics_Digital_Marketing/static/b1.JPG)
 
-![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Digital_Marketing_Agent/static/b2.JPG)
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Bank_Analytics_Digital_Marketing/static/b2.JPG)
 
-![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Digital_Marketing_Agent/static/b3.JPG)
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Bank_Analytics_Digital_Marketing/static/b3.JPG)
 
-![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Digital_Marketing_Agent/static/b4.JPG)
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Bank_Analytics_Digital_Marketing/static/b4.JPG)
 
-![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Digital_Marketing_Agent/static/b5.JPG)
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Bank_Analytics_Digital_Marketing/static/b5.JPG)
 
-![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Digital_Marketing_Agent/static/b6.JPG)
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Bank_Analytics_Digital_Marketing/static/b6.JPG)
 
-![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Digital_Marketing_Agent/static/b7.JPG)
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Bank_Analytics_Digital_Marketing/static/b7.JPG)
 
-![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Digital_Marketing_Agent/static/b8.JPG)
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Bank_Analytics_Digital_Marketing/static/b8.JPG)
 
-![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Digital_Marketing_Agent/static/b9.JPG)
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Bank_Analytics_Digital_Marketing/static/b9.JPG)
 
-![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Digital_Marketing_Agent/static/b10.JPG)
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Bank_Analytics_Digital_Marketing/static/b10.JPG)
 
 ---
 
