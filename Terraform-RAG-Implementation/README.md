@@ -45,10 +45,10 @@ Resource Group  (rg-myproject)
 
 | UI                   | Description                       |
 | -------------------- | --------------------------------- |
-| ![t1](static/t1.JPG) | Document upload interface         |
-| ![t2](static/t2.JPG) | Chat interface                    |
-| ![t3](static/t3.JPG) | Terraform plan output             |
-| ![t4](static/t4.JPG) | Azure Portal — deployed resources |
+| ![t1](static/t1.JPG) | Azure Portal — deployed resources |
+| ![t2](static/t2.JPG) | Azure Portal — deployed resources |
+| ![t3](static/t3.JPG) | RAG UI                            |
+| ![t4](static/t4.JPG) | Terraform Interface               |
 
 ## Features
 
