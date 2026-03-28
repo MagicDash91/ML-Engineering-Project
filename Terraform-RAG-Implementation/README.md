@@ -43,13 +43,12 @@ Resource Group  (rg-myproject)
 
 ## Screenshots
 
-![Application Screenshot 1](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Terraform-RAG-Implementation/static/t1.JPG)
-
-![Application Screenshot 2](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Terraform-RAG-Implementation/static/t2.JPG)
-
-![Application Screenshot 3](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Terraform-RAG-Implementation/static/t3.JPG)
-
-![Application Screenshot 4](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Terraform-RAG-Implementation/static/t4.JPG)
+| UI                   | Description                       |
+| -------------------- | --------------------------------- |
+| ![t1](static/t1.JPG) | Document upload interface         |
+| ![t2](static/t2.JPG) | Chat interface                    |
+| ![t3](static/t3.JPG) | Terraform plan output             |
+| ![t4](static/t4.JPG) | Azure Portal — deployed resources |
 
 ## Features
 
@@ -223,12 +222,3 @@ terraform destroy
 ```
 
 ---
-
-## Screenshots
-
-| UI                   | Description                       |
-| -------------------- | --------------------------------- |
-| ![t1](static/t1.JPG) | Document upload interface         |
-| ![t2](static/t2.JPG) | Chat interface                    |
-| ![t3](static/t3.JPG) | Terraform plan output             |
-| ![t4](static/t4.JPG) | Azure Portal — deployed resources |
