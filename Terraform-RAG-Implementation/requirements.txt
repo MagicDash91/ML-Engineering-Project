@@ -1,0 +1,20 @@
+# FastAPI and server
+fastapi
+uvicorn
+python-multipart
+
+# LangChain + Ollama
+langchain
+langchain-ollama
+langchain-community
+langchain-core
+langchain-huggingface
+langchain-text-splitters
+
+# RAG dependencies
+faiss-cpu
+pypdf
+sentence-transformers
+
+# Utilities
+pydantic
