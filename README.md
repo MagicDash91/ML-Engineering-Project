@@ -193,6 +193,7 @@ A specialized OCR (Optical Character Recognition) system fine-tuned on DeepSeek-
 - Google Cloud (Cloud Run, Cloud SQL)
 - AWS (DynamoDB, EC2, VPC, Lambda, ECR, Cloud Watch, Bedrock, S3, Sagemaker)
 - Docker
+- Terraform
 
 ### ⚡ Data Pipelines & Big Data
 - PySpark, Prefect, Airflow
