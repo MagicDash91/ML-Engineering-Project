@@ -1,0 +1,16 @@
+{"timestamp": "2026-03-01T16:11:23.616035", "task_id": "6667ade0-b8ba-4cad-bf9e-505954540545", "flags": ["guardrail_violation"], "blocked": true}
+{"timestamp": "2026-03-01T16:11:52.097193", "task_id": "6667ade0-b8ba-4cad-bf9e-505954540545", "flags": ["sql_injection"], "blocked": true}
+{"timestamp": "2026-03-01T16:12:24.296585", "task_id": "6667ade0-b8ba-4cad-bf9e-505954540545", "input_len": 42, "flags": [], "blocked": false, "output_len": 379}
+{"timestamp": "2026-03-01T16:12:51.811713", "task_id": "6667ade0-b8ba-4cad-bf9e-505954540545", "input_len": 55, "flags": [], "blocked": false, "output_len": 388}
+{"timestamp": "2026-03-10T17:38:01.798075", "task_id": "23c6116a-3a31-4031-8910-7ba27afc97ef", "input_len": 47, "flags": [], "blocked": false, "output_len": 197}
+{"timestamp": "2026-03-10T17:38:12.313742", "task_id": "23c6116a-3a31-4031-8910-7ba27afc97ef", "input_len": 39, "flags": [], "blocked": false, "output_len": 197}
+{"timestamp": "2026-03-10T18:30:45.985715", "task_id": "636dd14c-a6d9-4978-aa9e-4320a1dc7f60", "input_len": 52, "flags": [], "blocked": false, "output_len": 3834}
+{"timestamp": "2026-03-12T13:07:48.176765", "task_id": "8dd1c2fe-c801-443b-9bf3-024fa394c0f2", "input_len": 61, "flags": [], "blocked": false, "output_len": 3970}
+{"timestamp": "2026-03-12T13:09:33.640102", "task_id": "8dd1c2fe-c801-443b-9bf3-024fa394c0f2", "input_len": 45, "flags": [], "blocked": false, "output_len": 979}
+{"timestamp": "2026-03-21T14:21:03.915052", "task_id": "bbbe2951-b545-4380-beee-116cd9425ba0", "input_len": 126, "flags": [], "blocked": false, "output_len": 432, "chart_urls": []}
+{"timestamp": "2026-03-21T14:21:43.302936", "task_id": "bbbe2951-b545-4380-beee-116cd9425ba0", "input_len": 121, "flags": [], "blocked": false, "output_len": 583, "chart_urls": []}
+{"timestamp": "2026-03-21T15:11:27.586553", "task_id": "cdb4347b-0fec-4373-99e5-0b6795e806e0", "input_len": 126, "flags": [], "blocked": false, "output_len": 3981, "chart_urls": ["/outputs/charts/chat_viz_cdb4347b_20260321_151115_130997.png"]}
+{"timestamp": "2026-03-21T15:44:22.198930", "task_id": "cdb4347b-0fec-4373-99e5-0b6795e806e0", "input_len": 63, "flags": [], "blocked": false, "output_len": 63, "chart_urls": []}
+{"timestamp": "2026-03-21T15:44:48.350158", "task_id": "cdb4347b-0fec-4373-99e5-0b6795e806e0", "input_len": 63, "flags": [], "blocked": false, "output_len": 63, "chart_urls": []}
+{"timestamp": "2026-03-23T21:29:34.090296", "task_id": "b9d0dc31-f12e-4411-8d7a-7261130cfd6b", "input_len": 54, "flags": [], "blocked": false, "output_len": 38, "chart_urls": []}
+{"timestamp": "2026-03-23T21:30:26.210128", "task_id": "b9d0dc31-f12e-4411-8d7a-7261130cfd6b", "input_len": 126, "flags": [], "blocked": false, "output_len": 63, "chart_urls": []}

@@ -1,0 +1,42 @@
+[
+  {
+    "type": "ad_copy",
+    "title": "Brand – Google Ad Copy",
+    "platform": "Google",
+    "content": "### Variant 1: Consumer Benefit Focus\n**Headline:** Premium Brand Services (24 chars)\n**Description:** Exclusive benefits for Telkomsel users. Enhance connectivity today. (70 chars)\n**Hook:** Exclusive benefits for Telkomsel users\n**CTA:** Enhance connectivity today\n\n### Variant 2: Enterprise Efficiency Focus\n**Headline:** Enterprise Brand Solutions (26 chars)\n**Description:** Optimized for Telkomsel networks. Drive operational efficiency now. (71 chars)\n**Hook:** Optimized for Telkomsel networks\n**CTA:** Drive operational efficiency now\n\n### Variant 3: Digital Integration Focus\n**Headline:** Digital Brand Services (23 chars)\n**Description:** Seamless integration for Telkomsel. Upgrade digital experience now. (72 chars)\n**Hook:** Seamless integration for Telkomsel\n**CTA:** Upgrade digital experience now",
+    "video_url": "",
+    "timestamp": "2026-03-23T17:36:59.528782"
+  },
+  {
+    "type": "ad_copy",
+    "title": "Brand – Meta Ad Copy",
+    "platform": "Meta",
+    "content": "### Variant 1: Focus on Potential\n**Hook:** Your network is ready. Are you?\n**Headline:** Unlock Limitless Growth\n**Description:** Pair connectivity with Brand services. Turn online potential into real success.\n**CTA:** Explore Services\n\n### Variant 2: Focus on Ambition\n**Hook:** Your ambition deserves the best support.\n**Headline:** Power Your Dreams With Brand\n**Description:** Exclusive services for Telkomsel users. Turn your connection into achievement.\n**CTA:** Start Now\n\n### Variant 3: Focus on Elevation\n**Hook:** Dream bigger. We'll handle the rest.\n**Headline:** Elevate Your Journey Today\n**Description:** Ready for more? Brand services unlock premium features for your network.\n**CTA:** Learn More",
+    "video_url": "",
+    "timestamp": "2026-03-23T17:37:19.822261"
+  },
+  {
+    "type": "social_post",
+    "title": "Brand – Instagram Posts",
+    "platform": "Instagram",
+    "content": "[\n  {\n    \"post\": \"Loyalty pays off! 🎁 Did you know your Telkomsel points can be redeemed for extra quota or exclusive vouchers? Don't let them expire! Stay connected and reap the rewards of being a loyal user. 📲✨\\n\\nMake every connection count.\",\n    \"hashtags\": [\n      \"#Telkomsel\",\n      \"#LoyaltyRewards\",\n      \"#MyTelkomsel\",\n      \"#TelecomIndonesia\",\n      \"#DataPackages\",\n      \"#UserRetention\",\n      \"#DigitalRewards\",\n      \"#StayConnected\"\n    ],\n    \"cta\": \"Open MyTelkomsel App & Redeem Now!\"\n  },\n  {\n    \"post\": \"Buffering is so last year. 🚫 Experience the fastest network coverage across Indonesia! 🇮🇩 Whether you're gaming, streaming, or working remotely, trust the signal that never quits. Upgrade your digital life today. 🚀\\n\\n#NoMoreLag\",\n    \"hashtags\": [\n      \"#Telkomsel4G\",\n      \"#FastInternet\",\n      \"#NetworkCoverage\",\n      \"#StreamingReady\",\n      \"#GamerLife\",\n      \"#RemoteWork\",\n      \"#TechUpgrade\",\n      \"#IndonesiaDigital\"\n    ],\n    \"cta\": \"Switch to Telkomsel Plan Today!\"\n  },\n  {\n    \"post\": \"Good things are better when shared! 🤝 Invite your friends to join the Telkomsel family and enjoy exclusive benefits together. Grow your network and unlock special referral perks. Let's stay connected together! 🌐💙\\n\\n#TogetherWeConnect\",\n    \"hashtags\": [\n      \"#TelkomselCommunity\",\n      \"#ReferAFriend\",\n      \"#GrowWithUs\",\n      \"#ConnectionGoals\",\n      \"#MobileData\",\n      \"#SocialConnect\",\n      \"#TelkomselCare\",\n      \"#JoinNow\"\n    ],\n    \"cta\": \"Invite Friends via MyTelkomsel App!\"\n  }\n]",
+    "video_url": "",
+    "timestamp": "2026-03-23T17:37:47.557446"
+  },
+  {
+    "type": "social_post",
+    "title": "Brand – Twitter Posts",
+    "platform": "Twitter",
+    "content": "[\n  {\n    \"post\": \"Sudah lama jadi pelanggan Telkomsel? 🎉 Jangan lupa cek Poin Hadiah kamu! Bisa ditukar jadi kuota, voucher, hingga merchandise eksklusif. Loyalty itu untung! 📲✨ #Telkomsel #PoinHadiah #PelangganSetia #TelkomselCare #RewardsID #UndianTelkomsel #MobileData #Telekomunikasi\",\n    \"hashtags\": [\n      \"#Telkomsel\",\n      \"#PoinHadiah\",\n      \"#PelangganSetia\",\n      \"#TelkomselCare\",\n      \"#RewardsID\",\n      \"#UndianTelkomsel\",\n      \"#MobileData\",\n      \"#Telekomunikasi\"\n    ],\n    \"cta\": \"Cek MyTelkomsel App sekarang!\"\n  },\n  {\n    \"post\": \"Butuh internet lebih kencang buat kerja & streaming? 🚀 Upgrade ke paket 5G Telkomsel! Jaringan luas, harga bersahabat, bebas buffering. Saatnya naik kelas! 💪 #Internet5G #Telkomsel5G #UpgradePaket #KuotaCepat #StreamingLancar #WorkFromAnywhere #SignalKuat #IndonesiaDigital\",\n    \"hashtags\": [\n      \"#Internet5G\",\n      \"#Telkomsel5G\",\n      \"#UpgradePaket\",\n      \"#KuotaCepat\",\n      \"#StreamingLancar\",\n      \"#WorkFromAnywhere\",\n      \"#SignalKuat\",\n      \"#IndonesiaDigital\"\n    ],\n    \"cta\": \"Aktifkan paket 5G di link bio!\"\n  },\n  {\n    \"post\": \"Momen apa yang paling berkesan saat pakai jaringan Telkomsel? 🤔 Dari video call sama keluarga sampai nugas tanpa hambatan. Share ceritamu di bawah! 👇 #CeritaTelkomsel #TetapTerhubung #KoneksiTanpaBatas #TelkomselUser #ShareCerita #NetworkLife #StayConnected #KomunitasTelkomsel\",\n    \"hashtags\": [\n      \"#CeritaTelkomsel\",\n      \"#TetapTerhubung\",\n      \"#KoneksiTanpaBatas\",\n      \"#TelkomselUser\",\n      \"#ShareCerita\",\n      \"#NetworkLife\",\n      \"#StayConnected\",\n      \"#KomunitasTelkomsel\"\n    ],\n    \"cta\": \"Reply tweet ini dengan ceritamu!\"\n  }\n]",
+    "video_url": "",
+    "timestamp": "2026-03-23T17:38:25.242040"
+  },
+  {
+    "type": "social_post",
+    "title": "Brand – LinkedIn Posts",
+    "platform": "LinkedIn",
+    "content": "[\n  {\n    \"post\": \"In the digital era, connectivity is the backbone of business continuity. 📶\\n\\nAt Telkomsel, we understand that retention starts with reliability. Our enterprise-grade network ensures your operations remain seamless, minimizing downtime and maximizing productivity.\\n\\nTrust the network that powers Indonesia's largest businesses.\",\n    \"hashtags\": [\n      \"#Telkomsel\",\n      \"#NetworkReliability\",\n      \"#BusinessContinuity\",\n      \"#TelecomIndustry\",\n      \"#DigitalInfrastructure\",\n      \"#Indonesia\",\n      \"#EnterpriseSolutions\",\n      \"#Connectivity\"\n    ],\n    \"cta\": \"Visit our enterprise page to learn more.\"\n  },\n  {\n    \"post\": \"Growth isn't just about new acquisitions—it's about nurturing existing partnerships. 🤝\\n\\nWe're introducing exclusive value-added services for our long-term corporate clients. Because loyalty deserves recognition, and together we achieve more.\\n\\nLet's build a sustainable future through strong connectivity.\",\n    \"hashtags\": [\n      \"#CustomerRetention\",\n      \"#ClientSuccess\",\n      \"#TelkomselBusiness\",\n      \"#B2BMarketing\",\n      \"#LoyaltyStrategy\",\n      \"#TechPartnership\",\n      \"#GrowthMindset\",\n      \"#CorporateRewards\"\n    ],\n    \"cta\": \"Contact our account managers for details.\"\n  },\n  {\n    \"post\": \"Future-proofing your business requires infrastructure that evolves with you. 🚀\\n\\nWith our expanding 5G capabilities, Telkomsel empowers companies to innovate faster and operate smarter. Staying connected means staying ahead of the curve.\\n\\nInvest in a network built for tomorrow.\",\n    \"hashtags\": [\n      \"#5GTechnology\",\n      \"#Innovation\",\n      \"#FutureOfWork\",\n      \"#Telkomsel\",\n      \"#DigitalTransformation\",\n      \"#MobileNetwork\",\n      \"#TechLeadership\",\n      \"#SmartBusiness\"\n    ],\n    \"cta\": \"Explore our latest coverage map.\"\n  }\n]",
+    "video_url": "",
+    "timestamp": "2026-03-23T17:38:48.398238"
+  }
+]
