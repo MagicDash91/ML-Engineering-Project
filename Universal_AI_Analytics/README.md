@@ -36,7 +36,7 @@ User Input (optional: DB URI + files + analysis request)
                          │
                          ▼
 ┌────────────────────────────────────────────────────────────┐
-│  PHASE 1 — LangGraph Banking Planning (Gemini 2.5 Flash)   │
+│  PHASE 1 — LangGraph Banking Planning (Ollama qwen3.5)     │
 │  5 nodes: plan → ETL → ML → analytics → preliminary report │
 └────────────────────────┬───────────────────────────────────┘
                          │
@@ -57,13 +57,13 @@ User Input (optional: DB URI + files + analysis request)
                          │  analyst findings + chart vision analyses
                          ▼
              ┌──────────────────────────────┐
-             │  Gemini CDO → Marketing      │  ← Translates findings into
+             │ Qwen3.5 CDO → Marketing      │  ← Translates findings into
              │  Handoff Brief               │     data-driven campaign brief
              └──────────────────────────────┘
                          │
                          ▼
 ┌────────────────────────────────────────────────────────────┐
-│  PHASE 3a — LangGraph Marketing Planning (Gemini Flash)    │
+│  PHASE 3a — LangGraph Marketing Planning (Qwen3.5)         | 
 │  5 nodes: plan → research → strategy → content → brief     │
 └────────────────────────┬───────────────────────────────────┘
                          │
@@ -122,8 +122,8 @@ Backend        FastAPI + Uvicorn (port 8002)
 Agents         CrewAI (sequential process)
 Graphs         LangGraph (StateGraph)
 LLMs           NVIDIA LLaMA 3.3 Nemotron Super 49B  ← analytics agents + chat
-               Google Gemini 2.5 Flash               ← planning, vision, image gen
-               Ollama qwen3.5:cloud                  ← marketing agents, chart analysis
+               Google Gemini 3.1 Veo               ← image gen
+               Ollama qwen3.5:cloud                  ← marketing agents, chart analysis, planning, vision,
 Image Gen      Gemini 3.1 Flash Image Preview         ← 1K promotional posters ($0.067/image)
 Web Search     Tavily API
 Databases      Any SQLAlchemy-compatible DB (PostgreSQL, MySQL, SQLite, Snowflake, BigQuery)
