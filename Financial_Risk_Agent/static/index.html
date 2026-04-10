@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Financial Risk Monitor</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+:root {
+  --void:          #02040a;
+  --base:          #060b14;
+  --surface:       #0a1120;
+  --elevated:      #0f1c32;
+  --overlay:       #152340;
+  --border:        rgba(20,50,90,.5);
+  --border-bright: rgba(220,38,38,.35);
+  --primary:       #dc2626;
+  --primary-dim:   rgba(220,38,38,.15);
+  --primary-glow:  rgba(220,38,38,.25);
+  --accent:        #f59e0b;
+  --accent-dim:    rgba(245,158,11,.15);
+  --success:       #22c55e;
+  --success-dim:   rgba(34,197,94,.12);
+  --warning:       #f59e0b;
+  --warning-dim:   rgba(245,158,11,.12);
+  --danger:        #ef4444;
+  --danger-dim:    rgba(239,68,68,.12);
+  --info:          #3b82f6;
+  --text:          #e2e8f0;
+  --text-sec:      #94a3b8;
+  --text-muted:    #475569;
+  --radius:        12px;
+  --radius-sm:     8px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;background:var(--void);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:14px;}
+a{color:var(--primary);text-decoration:none;}
+input,textarea,select{font-family:inherit;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--overlay);border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:var(--text-muted);}
+
+.bg-mesh{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 15% 15%,rgba(220,38,38,.06) 0%,transparent 60%),
+    radial-gradient(ellipse 60% 50% at 85% 85%,rgba(245,158,11,.05) 0%,transparent 55%),
+    var(--void);}
+
+.app-shell{position:relative;z-index:1;display:flex;flex-direction:column;height:100vh;}
+.app-body{display:flex;flex:1;overflow:hidden;}
+
+/* Navbar */
+.navbar{height:52px;flex-shrink:0;background:rgba(6,11,20,.95);backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--border);display:flex;align-items:center;
+  justify-content:space-between;padding:0 1.25rem;gap:1rem;}
+.nav-brand{display:flex;align-items:center;gap:.65rem;}
+.nav-logo{width:28px;height:28px;border-radius:8px;
+  background:linear-gradient(135deg,#dc2626,#f59e0b);
+  display:flex;align-items:center;justify-content:center;font-size:.9rem;color:#fff;flex-shrink:0;}
+.nav-title{font-size:.92rem;font-weight:700;color:var(--text);}
+.nav-sub{font-size:.65rem;color:var(--text-muted);margin-top:1px;}
+.nav-right{display:flex;align-items:center;gap:.75rem;}
+.nav-chip{font-size:.68rem;color:var(--text-muted);background:var(--surface);
+  border:1px solid var(--border);border-radius:20px;padding:.2rem .6rem;}
+
+.status-pill{display:inline-flex;align-items:center;gap:.42rem;font-size:.72rem;
+  font-weight:600;padding:.22rem .72rem;border-radius:20px;border:1px solid;transition:all .3s;}
+.status-pill.idle   {color:#64748b;border-color:#1e3a5f;background:rgba(30,58,95,.2);}
+.status-pill.running{color:#f59e0b;border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.12);animation:pulse-warn 2s infinite;}
+.status-pill.waiting{color:#3b82f6;border-color:rgba(59,130,246,.4);background:rgba(59,130,246,.12);animation:pulse-info 2s infinite;}
+.status-pill.done   {color:#22c55e;border-color:rgba(34,197,94,.4);background:rgba(34,197,94,.12);}
+.status-pill.error  {color:#ef4444;border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.12);}
+@keyframes pulse-warn{0%,100%{opacity:1;}50%{opacity:.65;}}
+@keyframes pulse-info{0%,100%{opacity:1;}50%{opacity:.65;}}
+
+/* Sidebar */
+.sidebar{width:340px;flex-shrink:0;background:var(--base);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;}
+.sidebar-header{padding:1rem 1rem .75rem;border-bottom:1px solid var(--border);}
+.sidebar-header h6{font-size:.75rem;font-weight:600;color:var(--text-muted);
+  text-transform:uppercase;letter-spacing:.08em;margin-bottom:.75rem;}
+.sidebar-scroll{flex:1;overflow-y:auto;padding:.75rem 1rem 1rem;}
+
+/* Form */
+.form-label-sm{font-size:.73rem;font-weight:600;color:var(--text-sec);margin-bottom:.35rem;display:block;}
+.form-control-dark{background:var(--surface);border:1px solid var(--border);color:var(--text);
+  border-radius:var(--radius-sm);padding:.5rem .75rem;font-size:.82rem;width:100%;
+  transition:border-color .2s,box-shadow .2s;}
+.form-control-dark:focus{outline:none;border-color:var(--primary);
+  box-shadow:0 0 0 3px var(--primary-dim);}
+.form-control-dark::placeholder{color:var(--text-muted);}
+textarea.form-control-dark{resize:vertical;min-height:80px;line-height:1.5;}
+select.form-control-dark option{background:var(--surface);}
+
+.form-section{margin-bottom:1.1rem;}
+.input-row{display:flex;gap:.5rem;align-items:flex-end;}
+.input-row .form-control-dark{flex:1;}
+
+/* Badges */
+.badge-sm{font-size:.65rem;padding:.18rem .5rem;border-radius:4px;font-weight:600;}
+.badge-required{background:var(--primary-dim);color:var(--primary);border:1px solid var(--primary-glow);}
+.badge-optional{background:rgba(30,58,95,.4);color:#64748b;border:1px solid #1e3a5f;}
+
+/* Buttons */
+.btn-risk{background:var(--primary);color:#fff;border:none;border-radius:var(--radius-sm);
+  padding:.55rem 1rem;font-size:.82rem;font-weight:600;cursor:pointer;
+  transition:all .2s;display:inline-flex;align-items:center;gap:.45rem;}
+.btn-risk:hover{background:#b91c1c;transform:translateY(-1px);}
+.btn-risk:disabled{background:#374151;color:#6b7280;cursor:not-allowed;transform:none;}
+.btn-sm-ghost{background:transparent;color:var(--text-sec);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:.3rem .65rem;font-size:.73rem;cursor:pointer;
+  transition:all .2s;}
+.btn-sm-ghost:hover{background:var(--surface);color:var(--text);}
+.btn-approve{background:rgba(34,197,94,.15);color:#22c55e;border:1px solid rgba(34,197,94,.3);
+  border-radius:var(--radius-sm);padding:.4rem .9rem;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .2s;}
+.btn-approve:hover{background:rgba(34,197,94,.25);}
+.btn-abort{background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.3);
+  border-radius:var(--radius-sm);padding:.4rem .9rem;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .2s;}
+.btn-abort:hover{background:rgba(239,68,68,.25);}
+
+/* File upload zone */
+.upload-zone{border:2px dashed var(--border);border-radius:var(--radius-sm);
+  padding:1rem;text-align:center;cursor:pointer;transition:all .2s;
+  background:var(--surface);position:relative;}
+.upload-zone:hover,.upload-zone.drag-over{border-color:var(--primary);background:var(--primary-dim);}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-zone-text{font-size:.75rem;color:var(--text-muted);pointer-events:none;}
+.upload-zone-icon{font-size:1.3rem;color:var(--text-muted);margin-bottom:.4rem;pointer-events:none;}
+.file-pill{display:flex;align-items:center;gap:.4rem;background:var(--surface);
+  border:1px solid var(--border);border-radius:6px;padding:.25rem .5rem .25rem .6rem;
+  font-size:.72rem;color:var(--text-sec);margin-top:.35rem;}
+.file-pill .remove-file{background:none;border:none;color:var(--text-muted);
+  cursor:pointer;padding:0;margin-left:auto;font-size:.8rem;line-height:1;}
+.file-pill .remove-file:hover{color:var(--danger);}
+.file-badge{font-size:.6rem;padding:.1rem .3rem;border-radius:3px;font-weight:700;margin-right:.2rem;}
+.file-badge.csv{background:rgba(34,197,94,.2);color:#22c55e;}
+.file-badge.xlsx,.file-badge.xls{background:rgba(34,197,94,.2);color:#22c55e;}
+.file-badge.pdf{background:rgba(239,68,68,.2);color:#ef4444;}
+.file-badge.docx,.file-badge.doc{background:rgba(59,130,246,.2);color:#3b82f6;}
+.file-badge.pptx,.file-badge.ppt{background:rgba(245,158,11,.2);color:#f59e0b;}
+
+/* Main content */
+.main-content{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+
+/* Tabs */
+.tab-bar{display:flex;align-items:center;gap:0;padding:0 1.25rem;
+  background:var(--base);border-bottom:1px solid var(--border);flex-shrink:0;height:44px;}
+.tab-btn{background:none;border:none;color:var(--text-muted);font-size:.78rem;font-weight:500;
+  padding:.4rem .9rem;cursor:pointer;border-bottom:2px solid transparent;
+  transition:all .2s;display:flex;align-items:center;gap:.4rem;height:44px;white-space:nowrap;}
+.tab-btn:hover{color:var(--text-sec);}
+.tab-btn.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:600;}
+.tab-badge{background:var(--primary-dim);color:var(--primary);border-radius:10px;
+  padding:.05rem .4rem;font-size:.6rem;font-weight:700;}
+.tab-content{flex:1;overflow:hidden;display:none;}
+.tab-content.active{display:flex;flex-direction:column;}
+
+/* Console */
+.console-wrap{flex:1;overflow-y:auto;padding:1rem;font-family:'JetBrains Mono','Fira Code',monospace;font-size:.75rem;background:var(--void);}
+.log-line{padding:.12rem 0;line-height:1.55;word-break:break-word;}
+.log-line.info   {color:#94a3b8;}
+.log-line.success{color:#22c55e;}
+.log-line.warn   {color:#f59e0b;}
+.log-line.error  {color:#ef4444;}
+.log-line.log    {color:#cbd5e1;}
+
+/* HITL banner */
+.hitl-banner{display:none;margin:1rem;padding:.9rem 1.1rem;
+  background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);
+  border-radius:var(--radius);gap:.75rem;}
+.hitl-banner.show{display:flex;align-items:center;flex-wrap:wrap;}
+
+/* Report & Compliance */
+.report-wrap{flex:1;overflow-y:auto;padding:1.5rem 2rem;}
+.md-body{line-height:1.75;color:var(--text);}
+.md-body h1{font-size:1.5rem;font-weight:700;margin:1.5rem 0 .75rem;color:#f1f5f9;}
+.md-body h2{font-size:1.15rem;font-weight:600;margin:1.25rem 0 .6rem;color:#e2e8f0;
+  border-bottom:1px solid var(--border);padding-bottom:.4rem;}
+.md-body h3{font-size:.95rem;font-weight:600;margin:1rem 0 .5rem;color:#cbd5e1;}
+.md-body p{margin-bottom:.75rem;}
+.md-body ul,.md-body ol{padding-left:1.4rem;margin-bottom:.75rem;}
+.md-body li{margin-bottom:.25rem;}
+.md-body strong{color:#f1f5f9;}
+.md-body code{background:var(--surface);border:1px solid var(--border);
+  border-radius:4px;padding:.1rem .35rem;font-size:.82em;color:#93c5fd;}
+.md-body pre{background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:1rem;overflow-x:auto;margin-bottom:.75rem;}
+.md-body blockquote{border-left:3px solid var(--primary);padding:.5rem 1rem;
+  background:var(--primary-dim);border-radius:0 var(--radius-sm) var(--radius-sm) 0;margin-bottom:.75rem;}
+.md-body table{border-collapse:collapse;width:100%;margin-bottom:.75rem;font-size:.82rem;}
+.md-body th{background:var(--surface);padding:.5rem .75rem;text-align:left;
+  border:1px solid var(--border);font-weight:600;}
+.md-body td{padding:.45rem .75rem;border:1px solid var(--border);}
+.md-body tr:nth-child(even){background:rgba(255,255,255,.025);}
+
+/* Compliance specific */
+.compliance-badge{display:inline-flex;align-items:center;gap:.3rem;font-size:.72rem;
+  font-weight:600;padding:.2rem .55rem;border-radius:6px;}
+.cb-compliant{background:rgba(34,197,94,.15);color:#22c55e;}
+.cb-action   {background:rgba(245,158,11,.15);color:#f59e0b;}
+.cb-critical {background:rgba(239,68,68,.15);color:#ef4444;}
+
+/* Charts */
+.charts-wrap{flex:1;overflow-y:auto;padding:1.25rem;}
+.charts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(440px,1fr));gap:1.25rem;}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.chart-card-img{width:100%;display:block;cursor:pointer;transition:opacity .2s;}
+.chart-card-img:hover{opacity:.92;}
+.chart-card-body{padding:.75rem 1rem;}
+.chart-card-title{font-size:.82rem;font-weight:600;color:var(--text);margin-bottom:.4rem;}
+.chart-analysis{font-size:.75rem;color:var(--text-sec);line-height:1.6;
+  max-height:90px;overflow:hidden;position:relative;}
+.chart-analysis.expanded{max-height:none;}
+.expand-btn{font-size:.68rem;color:var(--primary);cursor:pointer;background:none;border:none;padding:0;margin-top:.2rem;}
+
+/* Downloads */
+.downloads-wrap{flex:1;overflow-y:auto;padding:1.25rem;}
+.dl-section-title{font-size:.72rem;font-weight:600;color:var(--text-muted);
+  text-transform:uppercase;letter-spacing:.08em;margin-bottom:.65rem;margin-top:1rem;}
+.dl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.7rem;}
+.dl-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:.75rem;display:flex;align-items:center;gap:.75rem;cursor:pointer;
+  text-decoration:none;transition:all .2s;}
+.dl-card:hover{border-color:var(--primary);background:var(--primary-dim);}
+.dl-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;
+  justify-content:center;font-size:1rem;flex-shrink:0;}
+.dl-icon.pdf {background:rgba(239,68,68,.15);color:#ef4444;}
+.dl-icon.pptx{background:rgba(245,158,11,.15);color:#f59e0b;}
+.dl-icon.md  {background:rgba(59,130,246,.15);color:#3b82f6;}
+.dl-name{font-size:.78rem;font-weight:600;color:var(--text);word-break:break-all;}
+.dl-size{font-size:.68rem;color:var(--text-muted);}
+
+/* Conversation */
+.chat-wrap{flex:1;overflow-y:auto;padding:1rem 1.5rem;}
+.chat-input-bar{padding:.75rem 1.25rem;border-top:1px solid var(--border);
+  background:var(--base);display:flex;gap:.65rem;align-items:flex-end;}
+.chat-input-bar textarea{flex:1;background:var(--surface);border:1px solid var(--border);
+  color:var(--text);border-radius:var(--radius-sm);padding:.55rem .75rem;
+  font-size:.82rem;resize:none;max-height:120px;min-height:40px;line-height:1.5;}
+.chat-input-bar textarea:focus{outline:none;border-color:var(--primary);}
+.chat-bubble{margin-bottom:.9rem;}
+.bubble-role{font-size:.65rem;font-weight:600;color:var(--text-muted);margin-bottom:.3rem;}
+.bubble-user .bubble-role{color:#3b82f6;text-align:right;}
+.bubble-content{background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:.65rem .9rem;font-size:.83rem;line-height:1.65;}
+.bubble-user .bubble-content{background:var(--primary-dim);border-color:var(--primary-glow);margin-left:3rem;}
+.bubble-assistant .bubble-content{margin-right:3rem;}
+.bubble-chart{margin-top:.6rem;}
+.bubble-chart img{max-width:100%;border-radius:var(--radius-sm);border:1px solid var(--border);}
+
+/* Empty state */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;gap:.65rem;color:var(--text-muted);}
+.empty-icon{font-size:2.5rem;opacity:.25;}
+.empty-label{font-size:.82rem;}
+
+/* Lightbox */
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;
+  display:none;align-items:center;justify-content:center;}
+.lightbox.show{display:flex;}
+.lightbox img{max-width:92vw;max-height:90vh;border-radius:var(--radius);
+  box-shadow:0 0 60px rgba(0,0,0,.8);}
+.lightbox-close{position:absolute;top:1.25rem;right:1.25rem;background:rgba(255,255,255,.1);
+  border:none;color:#fff;font-size:1.4rem;width:38px;height:38px;border-radius:50%;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.lightbox-close:hover{background:rgba(255,255,255,.2);}
+
+/* Misc */
+.tag-required{display:inline-block;font-size:.6rem;background:var(--primary-dim);
+  color:var(--primary);border-radius:4px;padding:.05rem .3rem;margin-left:.4rem;font-weight:700;vertical-align:middle;}
+</style>
+</head>
+<body>
+<div class="bg-mesh"></div>
+<div class="app-shell">
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <div class="nav-logo"><i class="fa-solid fa-shield-halved"></i></div>
+      <div>
+        <div class="nav-title">AI Financial Risk &amp; Compliance Monitor</div>
+        <div class="nav-sub">LangGraph · CrewAI · NVIDIA LLaMA · Ollama qwen3.5</div>
+      </div>
+    </div>
+    <div class="nav-right">
+      <span class="nav-chip"><i class="fa-solid fa-microchip me-1"></i>Port 8003</span>
+      <span id="statusPill" class="status-pill idle">
+        <i class="fa-solid fa-circle" style="font-size:.5rem;"></i> Idle
+      </span>
+    </div>
+  </nav>
+
+  <div class="app-body">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h6>Risk Analysis Setup</h6>
+        <!-- Run button -->
+        <button id="runBtn" class="btn-risk w-100" onclick="startAnalysis()">
+          <i class="fa-solid fa-shield-halved"></i> Run Risk Analysis
+        </button>
+      </div>
+      <div class="sidebar-scroll">
+
+        <!-- User Question -->
+        <div class="form-section">
+          <label class="form-label-sm">
+            Risk Question <span class="tag-required">REQUIRED</span>
+          </label>
+          <textarea id="analysisRequest" class="form-control-dark" rows="4"
+            placeholder="e.g. Assess the credit risk profile of this loan portfolio and identify the top default drivers. Compute VaR and perform stress testing on the P&amp;L data."></textarea>
+        </div>
+
+        <!-- Data Source note -->
+        <div style="font-size:.7rem;color:var(--text-muted);background:var(--surface);
+          border:1px solid var(--border);border-radius:var(--radius-sm);padding:.6rem .75rem;margin-bottom:1rem;">
+          <i class="fa-solid fa-circle-info me-1" style="color:var(--info);"></i>
+          Provide a <strong>Database URI</strong> <em>or</em> <strong>upload a file</strong> (or both).
+          At least one data source is required.
+        </div>
+
+        <!-- Database URI -->
+        <div class="form-section">
+          <label class="form-label-sm">
+            Database URI
+            <span class="badge-sm badge-optional ms-1">optional if file provided</span>
+          </label>
+          <input id="dbUri" type="text" class="form-control-dark"
+            placeholder="postgresql://user:pass@host:5432/db  or  sqlite:///path/to/file.db"/>
+          <div style="font-size:.67rem;color:var(--text-muted);margin-top:.3rem;">
+            Supports PostgreSQL, MySQL, SQLite, MSSQL, Snowflake
+          </div>
+        </div>
+
+        <!-- File Upload -->
+        <div class="form-section">
+          <label class="form-label-sm">
+            Upload Files
+            <span class="badge-sm badge-optional ms-1">optional if DB URI provided</span>
+          </label>
+          <div class="upload-zone" id="uploadZone">
+            <input type="file" id="fileInput" multiple
+              accept=".csv,.xlsx,.xls,.pdf,.docx,.doc,.pptx,.ppt"
+              onchange="handleFileSelect(this.files)"/>
+            <div class="upload-zone-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+            <div class="upload-zone-text">
+              Drop files here or click to browse<br/>
+              <span style="font-size:.65rem;opacity:.7;">CSV · Excel · PDF · Word · PPTX — multiple files OK</span>
+            </div>
+          </div>
+          <div id="fileList"></div>
+        </div>
+
+        <!-- Optional context -->
+        <div class="form-section">
+          <label class="form-label-sm">Risk Domain <span class="badge-sm badge-optional ms-1">optional</span></label>
+          <select id="riskDomain" class="form-control-dark">
+            <option value="">— Auto-detect —</option>
+            <option value="credit">Credit Risk</option>
+            <option value="market">Market Risk</option>
+            <option value="liquidity">Liquidity Risk</option>
+            <option value="operational">Operational Risk</option>
+            <option value="fraud">Fraud / AML</option>
+            <option value="portfolio">Portfolio Risk</option>
+          </select>
+        </div>
+
+        <div class="form-section">
+          <label class="form-label-sm">Entity / Portfolio Name <span class="badge-sm badge-optional ms-1">optional</span></label>
+          <input id="entityName" type="text" class="form-control-dark" placeholder="e.g. Retail Loan Book Q1 2025"/>
+        </div>
+
+        <div class="form-section">
+          <div style="display:flex;align-items:center;gap:.5rem;">
+            <input type="checkbox" id="useLanggraph" checked style="accent-color:var(--primary);">
+            <label for="useLanggraph" style="font-size:.78rem;color:var(--text-sec);cursor:pointer;">
+              LangGraph strategic risk planning (Phase 1 + HITL)
+            </label>
+          </div>
+        </div>
+
+      </div><!-- sidebar-scroll -->
+    </aside>
+
+    <!-- Main content -->
+    <div class="main-content">
+
+      <!-- Tab bar -->
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="showTab('console',this)">
+          <i class="fa-solid fa-terminal"></i> Console
+        </button>
+        <button class="tab-btn" onclick="showTab('report',this)">
+          <i class="fa-solid fa-file-contract"></i> Risk Report
+        </button>
+        <button class="tab-btn" onclick="showTab('charts',this)">
+          <i class="fa-solid fa-chart-area"></i> Charts
+          <span id="chartsCount" class="tab-badge" style="display:none;">0</span>
+        </button>
+        <button class="tab-btn" onclick="showTab('compliance',this)">
+          <i class="fa-solid fa-scale-balanced"></i> Compliance
+        </button>
+        <button class="tab-btn" onclick="showTab('downloads',this)">
+          <i class="fa-solid fa-download"></i> Downloads
+          <span id="dlCount" class="tab-badge" style="display:none;">0</span>
+        </button>
+        <button class="tab-btn" onclick="showTab('chat',this)" id="chatTabBtn">
+          <i class="fa-solid fa-comments"></i> Conversation
+        </button>
+      </div>
+
+      <!-- Console tab -->
+      <div class="tab-content active" id="tab-console">
+        <!-- HITL banner -->
+        <div class="hitl-banner" id="hitlBanner" style="flex-direction:column;align-items:stretch;gap:.75rem;">
+          <!-- Header row -->
+          <div style="display:flex;align-items:center;gap:.75rem;">
+            <i class="fa-solid fa-user-check" style="color:#3b82f6;font-size:1.1rem;flex-shrink:0;"></i>
+            <div style="flex:1;">
+              <div style="font-size:.85rem;font-weight:700;color:#93c5fd;">Human-in-the-Loop Review</div>
+              <div style="font-size:.75rem;color:#94a3b8;margin-top:.15rem;">
+                LangGraph has completed the risk planning phase. Review the plan below and approve to continue.
+              </div>
+            </div>
+            <button class="btn-approve" onclick="approveHitl(false)">
+              <i class="fa-solid fa-check me-1"></i>Approve &amp; Continue
+            </button>
+            <button class="btn-abort" onclick="approveHitl(true)">
+              <i class="fa-solid fa-xmark me-1"></i>Abort
+            </button>
+          </div>
+          <!-- Plan content -->
+          <div id="hitlPlanWrap" style="display:none;">
+            <!-- Toggle bar -->
+            <div onclick="toggleHitlPlan()" style="cursor:pointer;display:flex;align-items:center;gap:.5rem;
+              padding:.45rem .7rem;background:#1e293b;border-radius:6px 6px 0 0;border:1px solid #334155;">
+              <i class="fa-solid fa-map" style="color:#f59e0b;font-size:.8rem;"></i>
+              <span style="font-size:.78rem;font-weight:600;color:#f59e0b;">Strategic Risk Plan</span>
+              <i id="hitlToggleIcon" class="fa-solid fa-chevron-down" style="font-size:.7rem;color:#64748b;margin-left:auto;"></i>
+            </div>
+            <div id="hitlPlanBody" style="display:block;background:#0f172a;border:1px solid #334155;
+              border-top:none;border-radius:0 0 6px 6px;padding:1rem 1.1rem;max-height:340px;overflow-y:auto;">
+              <div id="hitlPlanContent" class="md-body" style="font-size:.8rem;color:#cbd5e1;"></div>
+              <div id="hitlReportContent" class="md-body" style="font-size:.8rem;color:#cbd5e1;margin-top:.75rem;
+                padding-top:.75rem;border-top:1px solid #1e293b;display:none;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="console-wrap" id="consoleWrap">
+          <div class="empty-state">
+            <div class="empty-icon"><i class="fa-solid fa-terminal"></i></div>
+            <div class="empty-label">Console output will appear here once analysis starts.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Risk Report tab -->
+      <div class="tab-content" id="tab-report">
+        <div class="report-wrap">
+          <div id="reportContent" class="md-body">
+            <div class="empty-state">
+              <div class="empty-icon"><i class="fa-solid fa-file-contract"></i></div>
+              <div class="empty-label">Risk report will appear here after analysis completes.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts tab -->
+      <div class="tab-content" id="tab-charts">
+        <div class="charts-wrap">
+          <div id="chartsGrid" class="charts-grid">
+            <div class="empty-state" style="grid-column:1/-1;height:300px;">
+              <div class="empty-icon"><i class="fa-solid fa-chart-area"></i></div>
+              <div class="empty-label">Risk charts will appear here after analysis completes.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Compliance tab -->
+      <div class="tab-content" id="tab-compliance">
+        <div class="report-wrap">
+          <div id="complianceContent" class="md-body">
+            <div class="empty-state">
+              <div class="empty-icon"><i class="fa-solid fa-scale-balanced"></i></div>
+              <div class="empty-label">Regulatory compliance summary will appear here after analysis completes.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Downloads tab -->
+      <div class="tab-content" id="tab-downloads">
+        <div class="downloads-wrap" id="downloadsContent">
+          <div class="empty-state" style="height:300px;">
+            <div class="empty-icon"><i class="fa-solid fa-download"></i></div>
+            <div class="empty-label">Downloadable reports will appear here after analysis completes.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Conversation tab -->
+      <div class="tab-content" id="tab-chat" style="flex-direction:column;">
+        <div class="chat-wrap" id="chatWrap">
+          <div class="empty-state" id="chatEmpty">
+            <div class="empty-icon"><i class="fa-solid fa-comments"></i></div>
+            <div class="empty-label">Ask questions about the risk assessment after analysis completes.</div>
+          </div>
+        </div>
+        <div class="chat-input-bar">
+          <textarea id="chatInput" rows="1" placeholder="Ask about risk findings, compliance status, or request a chart…"
+            onkeydown="chatKeydown(event)" oninput="autoResizeChat(this)"></textarea>
+          <button class="btn-risk" onclick="sendChat()" id="sendBtn" disabled>
+            <i class="fa-solid fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+
+    </div><!-- main-content -->
+  </div><!-- app-body -->
+</div><!-- app-shell -->
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+  <button class="lightbox-close" onclick="document.getElementById('lightbox').classList.remove('show')">
+    <i class="fa-solid fa-xmark"></i>
+  </button>
+  <img id="lightboxImg" src="" alt=""/>
+</div>
+
+<script>
+// ── State ────────────────────────────────────────────────────────────────────
+let currentTaskId   = null;
+let uploadedFileIds = [];
+let uploadedFileMeta = [];  // {file_id, filename, type, ...}
+let isRunning       = false;
+let evtSource       = null;
+let consoleEmpty    = true;
+let chartSections   = [];
+
+// ── Tabs ─────────────────────────────────────────────────────────────────────
+function showTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+// ── File Upload ───────────────────────────────────────────────────────────────
+const uploadZone = document.getElementById('uploadZone');
+uploadZone.addEventListener('dragover',  e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('drag-over');
+  handleFileSelect(e.dataTransfer.files);
+});
+
+async function handleFileSelect(files) {
+  if (!files || !files.length) return;
+  const formData = new FormData();
+  Array.from(files).forEach(f => formData.append('files', f));
+  try {
+    const res  = await fetch('/api/upload', { method: 'POST', body: formData });
+    const data = await res.json();
+    if (!res.ok) { alert('Upload failed: ' + (data.detail || JSON.stringify(data))); return; }
+    data.files.forEach(f => {
+      if (!uploadedFileIds.includes(f.file_id)) {
+        uploadedFileIds.push(f.file_id);
+        uploadedFileMeta.push(f);
+      }
+    });
+    renderFileList();
+  } catch(e) { alert('Upload error: ' + e); }
+}
+
+function renderFileList() {
+  const el = document.getElementById('fileList');
+  if (!uploadedFileMeta.length) { el.innerHTML = ''; return; }
+  el.innerHTML = uploadedFileMeta.map((f, i) => {
+    const ext = f.filename.split('.').pop().toLowerCase();
+    const info = f.type === 'structured'
+      ? `${f.rows?.toLocaleString() || '?'} rows · ${f.columns?.length || '?'} cols`
+      : `${f.word_count?.toLocaleString() || '?'} words`;
+    return `<div class="file-pill">
+      <span class="file-badge ${ext}">${ext.toUpperCase()}</span>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${f.filename}</span>
+      <span style="color:var(--text-muted);font-size:.66rem;white-space:nowrap;margin-left:.4rem;">${info}</span>
+      <button class="remove-file" onclick="removeFile(${i})"><i class="fa-solid fa-xmark"></i></button>
+    </div>`;
+  }).join('');
+}
+
+function removeFile(idx) {
+  uploadedFileIds.splice(idx, 1);
+  uploadedFileMeta.splice(idx, 1);
+  renderFileList();
+}
+
+// ── Start Analysis ────────────────────────────────────────────────────────────
+async function startAnalysis() {
+  const question = document.getElementById('analysisRequest').value.trim();
+  const dbUri    = document.getElementById('dbUri').value.trim();
+
+  if (!question) { alert('Please enter a risk question.'); return; }
+  if (!dbUri && !uploadedFileIds.length) {
+    alert('Please provide a Database URI or upload at least one file.'); return;
+  }
+
+  isRunning = true;
+  currentTaskId = null;
+  consoleEmpty  = true;
+  chartSections = [];
+
+  document.getElementById('runBtn').disabled = true;
+  document.getElementById('sendBtn').disabled = true;
+  document.getElementById('consoleWrap').innerHTML = '';
+  document.getElementById('hitlBanner').classList.remove('show');
+  document.getElementById('hitlPlanWrap').style.display = 'none';
+  document.getElementById('hitlPlanContent').innerHTML = '';
+  document.getElementById('hitlReportContent').innerHTML = '';
+  document.getElementById('hitlReportContent').style.display = 'none';
+  document.getElementById('reportContent').innerHTML = '<div class="empty-state"><div class="empty-icon"><i class="fa-solid fa-spinner fa-spin"></i></div><div class="empty-label">Analysis running…</div></div>';
+  document.getElementById('complianceContent').innerHTML = '<div class="empty-state"><div class="empty-icon"><i class="fa-solid fa-spinner fa-spin"></i></div><div class="empty-label">Generating compliance summary…</div></div>';
+  document.getElementById('chartsGrid').innerHTML = '<div class="empty-state" style="grid-column:1/-1;height:300px;"><div class="empty-icon"><i class="fa-solid fa-spinner fa-spin"></i></div><div class="empty-label">Generating charts…</div></div>';
+  document.getElementById('downloadsContent').innerHTML = '';
+  document.getElementById('chatWrap').innerHTML = '<div class="empty-state" id="chatEmpty"><div class="empty-icon"><i class="fa-solid fa-comments"></i></div><div class="empty-label">Chat available after analysis completes.</div></div>';
+
+  setStatus('running', 'Running');
+  showTab('console', document.querySelector('.tab-btn'));
+
+  const payload = {
+    analysis_request:  question,
+    database_uri:      dbUri,
+    uploaded_file_ids: uploadedFileIds,
+    use_langgraph:     document.getElementById('useLanggraph').checked,
+    risk_domain:       document.getElementById('riskDomain').value,
+    entity_name:       document.getElementById('entityName').value.trim(),
+  };
+
+  try {
+    const res  = await fetch('/api/analyze', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok) { alert('Error: ' + (data.detail || JSON.stringify(data))); resetUI(); return; }
+    currentTaskId = data.task_id;
+    openStream(currentTaskId);
+  } catch(e) { alert('Request error: ' + e); resetUI(); }
+}
+
+// ── SSE Stream ────────────────────────────────────────────────────────────────
+function openStream(taskId) {
+  if (evtSource) evtSource.close();
+  evtSource = new EventSource(`/api/stream/${taskId}`);
+  evtSource.onmessage = e => {
+    const msg = JSON.parse(e.data);
+    if (msg.type === 'hitl_pause') {
+      setStatus('waiting', 'Awaiting Approval');
+      document.getElementById('hitlBanner').classList.add('show');
+      appendLog('[HITL] Strategic risk plan ready — review and approve to continue.', 'info');
+
+      // Populate plan preview
+      const planWrap = document.getElementById('hitlPlanWrap');
+      const planContent = document.getElementById('hitlPlanContent');
+      const reportContent = document.getElementById('hitlReportContent');
+      if (msg.plan_preview) {
+        planContent.innerHTML = marked.parse(msg.plan_preview);
+        planWrap.style.display = 'block';
+        hljs.highlightAll();
+      }
+      if (msg.preliminary_report) {
+        reportContent.innerHTML = marked.parse(msg.preliminary_report);
+        reportContent.style.display = 'block';
+      }
+      return;
+    }
+    if (msg.type === 'complete') {
+      evtSource.close();
+      document.getElementById('hitlBanner').classList.remove('show');
+      setStatus('done', 'Complete');
+      isRunning = false;
+      document.getElementById('runBtn').disabled = false;
+      document.getElementById('sendBtn').disabled = false;
+      loadResults(taskId);
+      return;
+    }
+    if (msg.type === 'error' || msg.type === 'aborted') {
+      evtSource.close();
+      document.getElementById('hitlBanner').classList.remove('show');
+      // Fetch all buffered logs so the actual error message is always visible
+      fetch(`/api/logs/${taskId}`)
+        .then(r => r.json())
+        .then(data => {
+          (data.logs || []).forEach(entry => {
+            if (entry.message && entry.type !== 'hitl_pause') {
+              appendLog(entry.message, entry.type || 'log');
+            }
+          });
+        })
+        .catch(() => {});
+      setStatus('error', msg.type === 'aborted' ? 'Aborted' : 'Error');
+      isRunning = false;
+      document.getElementById('runBtn').disabled = false;
+      return;
+    }
+    if (msg.message) appendLog(msg.message, msg.type || 'log');
+  };
+  evtSource.onerror = () => {
+    if (!isRunning) return;
+    appendLog('Stream connection interrupted — polling…', 'warn');
+    evtSource.close();
+    setTimeout(() => pollStatus(taskId), 3000);
+  };
+}
+
+async function pollStatus(taskId) {
+  try {
+    const res  = await fetch(`/api/status/${taskId}`);
+    const data = await res.json();
+    if (data.status === 'completed') {
+      setStatus('done', 'Complete');
+      isRunning = false;
+      document.getElementById('runBtn').disabled = false;
+      document.getElementById('sendBtn').disabled = false;
+      loadResults(taskId);
+    } else if (data.status === 'error') {
+      setStatus('error', 'Error');
+      isRunning = false;
+      document.getElementById('runBtn').disabled = false;
+    } else {
+      setTimeout(() => pollStatus(taskId), 4000);
+    }
+  } catch(e) {
+    setTimeout(() => pollStatus(taskId), 5000);
+  }
+}
+
+// ── HITL ──────────────────────────────────────────────────────────────────────
+function toggleHitlPlan() {
+  const body = document.getElementById('hitlPlanBody');
+  const icon = document.getElementById('hitlToggleIcon');
+  const collapsed = body.style.display === 'none';
+  body.style.display = collapsed ? 'block' : 'none';
+  icon.className = collapsed ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down';
+  icon.style.color = collapsed ? '#f59e0b' : '#64748b';
+}
+
+async function approveHitl(abort) {
+  if (!currentTaskId) return;
+  document.getElementById('hitlBanner').classList.remove('show');
+  await fetch(`/api/approve/${currentTaskId}`, {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ abort })
+  });
+  if (abort) {
+    setStatus('error', 'Aborted');
+    isRunning = false;
+    document.getElementById('runBtn').disabled = false;
+    appendLog('Analysis aborted by user.', 'warn');
+  } else {
+    setStatus('running', 'Running Phase 2');
+    appendLog('HITL: Approved — proceeding to Risk Analytics crew…', 'success');
+  }
+}
+
+// ── Load Results ──────────────────────────────────────────────────────────────
+async function loadResults(taskId) {
+  try {
+    const res  = await fetch(`/api/results/${taskId}`);
+    const data = await res.json();
+
+    // Risk Report
+    if (data.risk_report) {
+      document.getElementById('reportContent').innerHTML =
+        '<div class="md-body">' + marked.parse(data.risk_report) + '</div>';
+      hljs.highlightAll();
+    }
+
+    // Compliance
+    if (data.compliance_summary) {
+      document.getElementById('complianceContent').innerHTML =
+        '<div class="md-body">' + marked.parse(data.compliance_summary) + '</div>';
+    }
+
+    // Charts
+    chartSections = data.risk_blog_sections || [];
+    renderCharts(chartSections);
+
+    // Downloads
+    renderDownloads(data.all_reports || []);
+
+    // Tab badges
+    if (chartSections.length) {
+      const cb = document.getElementById('chartsCount');
+      cb.textContent = chartSections.length;
+      cb.style.display = '';
+    }
+    if ((data.all_reports || []).length) {
+      const db = document.getElementById('dlCount');
+      db.textContent = data.all_reports.length;
+      db.style.display = '';
+    }
+  } catch(e) {
+    appendLog('Could not load results: ' + e, 'warn');
+  }
+}
+
+function renderCharts(sections) {
+  const grid = document.getElementById('chartsGrid');
+  if (!sections.length) {
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;height:300px;"><div class="empty-icon"><i class="fa-solid fa-chart-area"></i></div><div class="empty-label">No charts generated.</div></div>';
+    return;
+  }
+  grid.innerHTML = sections.map((s, i) => {
+    const analysis = s.gemini_analysis || '';
+    const recs     = s.nvidia_recommendations || '';
+    // Render a truncated plain-text preview; full markdown rendered on expand
+    const preview  = analysis.length > 320
+      ? analysis.slice(0, 320).replace(/[#*`_]/g, '').trimEnd() + '…'
+      : analysis.replace(/[#*`_]/g, '');
+    return `
+    <div class="chart-card">
+      <img class="chart-card-img" src="${s.chart_url}" alt="${s.title}"
+        onclick="openLightbox('${s.chart_url}')"/>
+      <div class="chart-card-body">
+        <div class="chart-card-title">${s.title || 'Risk Chart'}</div>
+        <div class="chart-analysis md-body" id="analysis-${i}">${preview}</div>
+        ${analysis.length > 320
+          ? `<button class="expand-btn" onclick="toggleAnalysis(${i})">Show more</button>` : ''}
+        ${recs
+          ? `<div class="md-body" style="margin-top:.6rem;font-size:.74rem;border-top:1px solid var(--border);padding-top:.5rem;">${marked.parse(recs)}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleAnalysis(i) {
+  const el       = document.getElementById('analysis-' + i);
+  const s        = chartSections[i];
+  const expanded = el.classList.toggle('expanded');
+  if (expanded) {
+    el.innerHTML = marked.parse(s.gemini_analysis || '');
+    hljs.highlightAll();
+    el.nextElementSibling.textContent = 'Show less';
+  } else {
+    const preview = (s.gemini_analysis || '').slice(0, 320).replace(/[#*`_]/g, '').trimEnd() + '…';
+    el.innerHTML  = preview;
+    el.nextElementSibling.textContent = 'Show more';
+  }
+}
+
+function renderDownloads(reports) {
+  const el = document.getElementById('downloadsContent');
+  if (!reports.length) {
+    el.innerHTML = '<div class="empty-state" style="height:300px;"><div class="empty-icon"><i class="fa-solid fa-download"></i></div><div class="empty-label">No downloadable reports.</div></div>';
+    return;
+  }
+  const icons = { pdf:'fa-file-pdf', pptx:'fa-file-powerpoint', md:'fa-file-lines' };
+  el.innerHTML = '<div class="dl-section-title">Risk Reports & Presentations</div>'
+    + '<div class="dl-grid">'
+    + reports.map(r => `
+      <a href="${r.url}" target="_blank" class="dl-card">
+        <div class="dl-icon ${r.ext}"><i class="fa-solid ${icons[r.ext]||'fa-file'}"></i></div>
+        <div>
+          <div class="dl-name">${r.name}</div>
+          <div class="dl-size">${(r.size/1024).toFixed(1)} KB · ${r.ext.toUpperCase()}</div>
+        </div>
+      </a>`).join('')
+    + '</div>';
+}
+
+// ── Console ───────────────────────────────────────────────────────────────────
+function appendLog(msg, type) {
+  const wrap = document.getElementById('consoleWrap');
+  if (consoleEmpty) { wrap.innerHTML = ''; consoleEmpty = false; }
+  const line = document.createElement('div');
+  line.className = 'log-line ' + (type || 'log');
+  const ts = new Date().toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  line.textContent = `[${ts}] ${msg}`;
+  wrap.appendChild(line);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+// ── Status pill ───────────────────────────────────────────────────────────────
+function setStatus(cls, label) {
+  const pill = document.getElementById('statusPill');
+  pill.className = 'status-pill ' + cls;
+  pill.innerHTML = `<i class="fa-solid fa-circle" style="font-size:.5rem;"></i> ${label}`;
+}
+
+function resetUI() {
+  isRunning = false;
+  document.getElementById('runBtn').disabled = false;
+  setStatus('idle', 'Idle');
+}
+
+// ── Lightbox ─────────────────────────────────────────────────────────────────
+function openLightbox(url) {
+  document.getElementById('lightboxImg').src = url;
+  document.getElementById('lightbox').classList.add('show');
+}
+function closeLightbox(e) {
+  if (e.target.id === 'lightbox' || e.target.id === 'lightboxImg') {
+    document.getElementById('lightbox').classList.remove('show');
+  }
+}
+
+// ── Chat ─────────────────────────────────────────────────────────────────────
+function chatKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+}
+function autoResizeChat(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+async function sendChat() {
+  const input = document.getElementById('chatInput');
+  const msg   = input.value.trim();
+  if (!msg || !currentTaskId) return;
+  input.value = '';
+  input.style.height = 'auto';
+
+  const wrap = document.getElementById('chatWrap');
+  const empty = document.getElementById('chatEmpty');
+  if (empty) empty.remove();
+
+  appendBubble('user', msg, []);
+
+  const thinking = document.createElement('div');
+  thinking.className = 'chat-bubble bubble-assistant';
+  thinking.id = 'thinking';
+  thinking.innerHTML = '<div class="bubble-role">Risk AI</div><div class="bubble-content" style="color:var(--text-muted);font-style:italic;">Analysing…</div>';
+  wrap.appendChild(thinking);
+  wrap.scrollTop = wrap.scrollHeight;
+
+  try {
+    const res  = await fetch(`/api/chat/${currentTaskId}`, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ message: msg })
+    });
+    const data = await res.json();
+    document.getElementById('thinking')?.remove();
+    if (!res.ok) {
+      appendBubble('assistant', '⚠ ' + (data.detail || 'Error from server.'), []);
+    } else {
+      appendBubble('assistant', data.reply, data.chart_urls || []);
+    }
+  } catch(e) {
+    document.getElementById('thinking')?.remove();
+    appendBubble('assistant', '⚠ Network error: ' + e, []);
+  }
+}
+
+function appendBubble(role, text, chartUrls) {
+  const wrap = document.getElementById('chatWrap');
+  const div  = document.createElement('div');
+  div.className = `chat-bubble bubble-${role}`;
+  const roleLabel = role === 'user' ? 'You' : 'Risk AI';
+  let html = `<div class="bubble-role">${roleLabel}</div>
+    <div class="bubble-content md-body">${marked.parse(text)}</div>`;
+  if (chartUrls && chartUrls.length) {
+    html += chartUrls.map(u =>
+      `<div class="bubble-chart"><img src="${u}" alt="chart" onclick="openLightbox('${u}')"/></div>`
+    ).join('');
+  }
+  div.innerHTML = html;
+  wrap.appendChild(div);
+  wrap.scrollTop = wrap.scrollHeight;
+  hljs.highlightAll();
+}
+</script>
+</body>
+</html>
