@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AGI System</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+:root{
+  --void:#060d1a; --base:#0a1628; --surface:#0f1f3d; --elevated:#152035;
+  --border:rgba(59,130,246,.16); --border-hi:rgba(99,102,241,.5);
+  --text:#e2e8f0; --text-sec:#94a3b8; --text-muted:#475569;
+  --indigo:#6366f1; --emerald:#10b981; --amber:#f59e0b;
+  --red:#ef4444; --violet:#8b5cf6; --sky:#0ea5e9; --orange:#f97316;
+  --r:12px; --r-sm:7px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--void);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:14px}
+
+/* ── Shell ── */
+.shell{display:flex;height:100vh;overflow:hidden}
+
+/* ── Sidebar ── */
+.sidebar{
+  width:260px;flex-shrink:0;background:var(--base);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.sidebar-top{padding:.9rem .85rem .5rem;flex-shrink:0}
+.logo{display:flex;align-items:center;gap:.6rem;margin-bottom:1rem}
+.logo-icon{width:30px;height:30px;background:linear-gradient(135deg,var(--indigo),var(--violet));
+  border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0}
+.logo-text{font-size:.9rem;font-weight:700}
+.logo-sub{font-size:.62rem;color:var(--text-muted)}
+.btn-new{
+  width:100%;padding:.55rem .8rem;border:1px solid var(--border-hi);border-radius:var(--r-sm);
+  background:rgba(99,102,241,.1);color:var(--indigo);font-size:.78rem;font-weight:600;
+  cursor:pointer;display:flex;align-items:center;gap:.5rem;transition:background .15s;
+}
+.btn-new:hover{background:rgba(99,102,241,.2)}
+.sidebar-hist{flex:1;overflow-y:auto;padding:.5rem .7rem;display:flex;flex-direction:column;gap:.3rem}
+.hist-label{font-size:.6rem;font-weight:700;letter-spacing:.12em;color:var(--text-muted);
+  text-transform:uppercase;padding:.4rem .15rem .2rem}
+.hist-item{
+  padding:.45rem .65rem;border-radius:var(--r-sm);cursor:pointer;
+  font-size:.76rem;color:var(--text-sec);transition:background .12s;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  display:flex;align-items:center;gap:.4rem;
+}
+.hist-item:hover{background:var(--surface);color:var(--text)}
+.hist-item.active{background:var(--elevated);color:var(--text)}
+.hist-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.hist-dot.completed{background:var(--emerald)}
+.hist-dot.running{background:var(--amber);animation:pulse 1.2s infinite}
+.hist-dot.error{background:var(--red)}
+.hist-dot.queued,.hist-dot.planning{background:var(--text-muted)}
+
+/* ── Main ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--void)}
+
+/* ── Chat area ── */
+.chat-area{
+  flex:1;overflow-y:auto;padding:1.5rem 0;
+  display:flex;flex-direction:column;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+}
+.chat-area::-webkit-scrollbar{width:5px}
+.chat-area::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+
+.chat-inner{max-width:780px;width:100%;margin:0 auto;padding:0 1.25rem;display:flex;flex-direction:column;gap:1.5rem}
+
+/* Empty state */
+.chat-empty{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;gap:1rem;color:var(--text-muted);text-align:center;padding:2rem;
+}
+.chat-empty-icon{font-size:2.5rem;opacity:.3}
+.chat-empty h2{font-size:1.3rem;color:var(--text-sec);font-weight:600}
+.chat-empty p{font-size:.84rem;max-width:420px;line-height:1.6}
+.suggestion-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;max-width:480px;margin-top:.5rem}
+.suggestion{
+  background:var(--elevated);border:1px solid var(--border);border-radius:var(--r);
+  padding:.7rem .9rem;font-size:.78rem;color:var(--text-sec);cursor:pointer;
+  text-align:left;transition:border-color .15s,color .15s;line-height:1.4;
+}
+.suggestion:hover{border-color:var(--border-hi);color:var(--text)}
+
+/* Message bubbles */
+.msg{display:flex;flex-direction:column;gap:.5rem}
+.msg-user{align-items:flex-end}
+.msg-ai{align-items:flex-start}
+
+.msg-bubble-user{
+  background:linear-gradient(135deg,var(--indigo),var(--violet));
+  color:#fff;border-radius:var(--r) var(--r) 4px var(--r);
+  padding:.75rem 1rem;font-size:.88rem;line-height:1.6;
+  max-width:85%;word-break:break-word;
+}
+.msg-files-user{display:flex;flex-wrap:wrap;gap:.35rem;justify-content:flex-end;margin-bottom:.3rem}
+.file-chip-user{
+  display:flex;align-items:center;gap:.3rem;font-size:.68rem;
+  background:rgba(99,102,241,.25);border:1px solid rgba(99,102,241,.4);
+  border-radius:99px;padding:.18rem .55rem;color:#c7d2fe;
+}
+
+/* AI avatar */
+.ai-row{display:flex;gap:.75rem;align-items:flex-start}
+.ai-avatar{
+  width:28px;height:28px;border-radius:8px;flex-shrink:0;margin-top:.1rem;
+  background:linear-gradient(135deg,#1e293b,#334155);
+  border:1px solid var(--border-hi);display:flex;align-items:center;justify-content:center;font-size:.75rem;
+}
+
+/* Thinking / steps section */
+.thinking-wrap{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  overflow:hidden;max-width:100%;
+}
+.thinking-header{
+  display:flex;align-items:center;gap:.5rem;padding:.55rem .9rem;
+  cursor:pointer;user-select:none;font-size:.78rem;color:var(--text-sec);
+  border-bottom:1px solid transparent;transition:background .12s;
+}
+.thinking-header:hover{background:rgba(255,255,255,.03)}
+.thinking-header.open{border-bottom-color:var(--border)}
+.thinking-spinner{
+  width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--indigo);
+  border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;
+}
+.thinking-spinner.done{border:2px solid var(--emerald);animation:none;background:var(--emerald);
+  display:flex;align-items:center;justify-content:center}
+.thinking-spinner.done::after{content:'✓';font-size:.55rem;color:#fff}
+.thinking-chevron{margin-left:auto;transition:transform .2s;font-size:.7rem;color:var(--text-muted)}
+.thinking-chevron.open{transform:rotate(180deg)}
+.thinking-body{display:none;padding:.5rem .9rem .65rem;display:flex;flex-direction:column;gap:.3rem}
+.thinking-body.hidden{display:none}
+.step-line{
+  display:flex;align-items:flex-start;gap:.55rem;padding:.3rem .4rem;
+  border-radius:var(--r-sm);font-size:.76rem;
+}
+.step-line.step_start{color:var(--indigo)}
+.step-line.eval.pass{color:var(--emerald)}
+.step-line.eval.warn{color:var(--amber)}
+.step-line.retry{color:var(--orange)}
+.step-line.info{color:var(--text-muted)}
+.step-line.synthesis_start{color:var(--violet)}
+.step-line.error{color:var(--red)}
+.step-icon{flex-shrink:0;margin-top:.05rem}
+.step-score{
+  margin-left:auto;flex-shrink:0;font-size:.65rem;font-weight:700;
+  padding:.08rem .4rem;border-radius:99px;
+}
+.step-score.pass{background:rgba(16,185,129,.15);color:var(--emerald)}
+.step-score.warn{background:rgba(245,158,11,.15);color:var(--amber)}
+
+/* Final answer */
+.answer-wrap{
+  background:var(--base);border:1px solid var(--border);border-radius:var(--r);
+  padding:1.1rem 1.25rem;font-size:.88rem;line-height:1.75;color:var(--text-sec);
+  max-width:100%;
+}
+.answer-wrap h1{font-size:1.2rem;font-weight:700;color:var(--text);margin:1rem 0 .4rem}
+.answer-wrap h2{font-size:1rem;font-weight:700;color:var(--text);margin:.85rem 0 .35rem;
+  padding-bottom:.3rem;border-bottom:1px solid var(--border)}
+.answer-wrap h3{font-size:.9rem;font-weight:700;color:var(--indigo);margin:.7rem 0 .3rem}
+.answer-wrap p{margin-bottom:.7rem}
+.answer-wrap ul,.answer-wrap ol{padding-left:1.4rem;margin-bottom:.7rem}
+.answer-wrap li{margin-bottom:.25rem}
+.answer-wrap strong{color:var(--text);font-weight:600}
+.answer-wrap em{color:var(--text-sec)}
+.answer-wrap code{font-family:'SF Mono','Fira Code',monospace;background:var(--surface);
+  padding:.1rem .35rem;border-radius:4px;font-size:.82em;color:var(--sky)}
+.answer-wrap pre{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);
+  padding:.9rem 1rem;overflow-x:auto;margin:.75rem 0}
+.answer-wrap pre code{background:none;padding:0;font-size:.82rem}
+.answer-wrap table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.82rem}
+.answer-wrap th{background:var(--surface);color:var(--text);padding:.4rem .75rem;
+  text-align:left;border:1px solid var(--border);font-weight:600}
+.answer-wrap td{padding:.35rem .75rem;border:1px solid var(--border);color:var(--text-sec)}
+.answer-wrap blockquote{border-left:3px solid var(--indigo);padding:.4rem .9rem;
+  color:var(--text-muted);margin:.5rem 0;background:rgba(99,102,241,.05);border-radius:0 var(--r-sm) var(--r-sm) 0}
+.answer-wrap hr{border:none;border-top:1px solid var(--border);margin:.9rem 0}
+.answer-wrap img{max-width:420px;width:100%;height:auto;border-radius:var(--r-sm);
+  border:1px solid var(--border);display:block;margin:.6rem 0;cursor:zoom-in}
+.answer-wrap img:hover{max-width:100%;transition:max-width .2s ease}
+
+/* Typing indicator */
+.typing-dots{display:flex;gap:.3rem;padding:.2rem .1rem}
+.typing-dots span{width:7px;height:7px;border-radius:50%;background:var(--text-muted);
+  animation:bounce .9s ease-in-out infinite}
+.typing-dots span:nth-child(2){animation-delay:.15s}
+.typing-dots span:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,80%,100%{transform:scale(.8);opacity:.5}40%{transform:scale(1.1);opacity:1}}
+
+/* ── Input bar ── */
+.input-bar{flex-shrink:0;border-top:1px solid var(--border);background:var(--base);padding:1rem 1.5rem 1.25rem}
+.input-inner{max-width:780px;margin:0 auto}
+.file-chips{display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.5rem}
+.file-chip{
+  display:flex;align-items:center;gap:.35rem;
+  background:var(--surface);border:1px solid var(--border);border-radius:99px;
+  padding:.2rem .6rem .2rem .5rem;font-size:.72rem;color:var(--text-sec);
+}
+.file-chip-icon{font-size:.75rem}
+.file-chip-remove{background:none;border:none;color:var(--text-muted);cursor:pointer;
+  font-size:.8rem;padding:0;line-height:1;margin-left:.15rem}
+.file-chip-remove:hover{color:var(--red)}
+.input-box{
+  display:flex;align-items:flex-end;gap:.5rem;
+  background:var(--elevated);border:1px solid var(--border);border-radius:var(--r);
+  padding:.5rem .55rem .5rem .75rem;transition:border-color .15s;
+}
+.input-box:focus-within{border-color:var(--border-hi)}
+textarea#q{
+  flex:1;background:none;border:none;outline:none;color:var(--text);
+  font-family:inherit;font-size:.9rem;line-height:1.55;resize:none;
+  min-height:24px;max-height:160px;overflow-y:auto;padding:.1rem 0;
+}
+textarea#q::placeholder{color:var(--text-muted)}
+.input-actions{display:flex;align-items:center;gap:.35rem;flex-shrink:0}
+.btn-attach{
+  background:none;border:none;color:var(--text-muted);cursor:pointer;
+  font-size:1.1rem;padding:.2rem .3rem;border-radius:var(--r-sm);transition:color .15s;
+  display:flex;align-items:center;
+}
+.btn-attach:hover{color:var(--text)}
+.db-toggle{
+  background:none;border:1px solid var(--border);border-radius:var(--r-sm);
+  color:var(--text-muted);font-size:.68rem;padding:.2rem .55rem;cursor:pointer;
+  transition:border-color .15s,color .15s;white-space:nowrap;
+}
+.db-toggle:hover,.db-toggle.active{border-color:var(--border-hi);color:var(--text)}
+.db-row{
+  display:none;margin-top:.45rem;
+}
+.db-row.show{display:flex;gap:.5rem;align-items:center}
+.db-input{
+  flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);
+  color:var(--text);font-size:.78rem;padding:.4rem .7rem;font-family:monospace;outline:none;
+  transition:border-color .15s;
+}
+.db-input:focus{border-color:var(--border-hi)}
+.btn-send{
+  width:34px;height:34px;border-radius:var(--r-sm);border:none;
+  background:var(--indigo);color:#fff;cursor:pointer;font-size:.9rem;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s,opacity .15s;flex-shrink:0;
+}
+.btn-send:hover{background:#5254e7}
+.btn-send:disabled{opacity:.4;cursor:not-allowed}
+.input-hint{font-size:.68rem;color:var(--text-muted);margin-top:.4rem;text-align:center}
+input[type=file]{display:none}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-top">
+      <div class="logo">
+        <div class="logo-icon">🧠</div>
+        <div>
+          <div class="logo-text">AGI System</div>
+          <div class="logo-sub">Self-Directing AI</div>
+        </div>
+      </div>
+      <button class="btn-new" onclick="newChat()">
+        <span>＋</span> New analysis
+      </button>
+    </div>
+    <div class="sidebar-hist" id="hist-list">
+      <div class="hist-label">Recent</div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Chat area -->
+    <div class="chat-area" id="chat-area">
+      <div class="chat-inner" id="chat-inner">
+        <div class="chat-empty" id="chat-empty">
+          <div class="chat-empty-icon">🧠</div>
+          <h2>What can I help you solve?</h2>
+          <p>I will automatically build a team of AI agents tailored to your problem — data analysis, marketing, research, or anything else.</p>
+          <div class="suggestion-grid">
+            <button class="suggestion" onclick="useSuggestion(this)">Why is our customer churn increasing?</button>
+            <button class="suggestion" onclick="useSuggestion(this)">Analyse sales performance and find key drivers</button>
+            <button class="suggestion" onclick="useSuggestion(this)">Help me launch a retention marketing campaign</button>
+            <button class="suggestion" onclick="useSuggestion(this)">Identify fraud patterns in transaction data</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input bar -->
+    <div class="input-bar">
+      <div class="input-inner">
+        <div class="file-chips" id="file-chips"></div>
+
+        <div class="input-box">
+          <textarea id="q" rows="1" placeholder="Ask anything… attach files or a database URI for data analysis"
+            onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+          <div class="input-actions">
+            <button class="btn-attach" title="Attach files" onclick="document.getElementById('file-input').click()">📎</button>
+            <button class="db-toggle" id="db-toggle" onclick="toggleDb()">🗄 DB</button>
+            <button class="btn-send" id="btn-send" onclick="send()" title="Send">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="db-row" id="db-row">
+          <input class="db-input" id="db-uri" placeholder="postgresql://user:pass@localhost:5432/mydb" />
+        </div>
+
+        <div class="input-hint">AGI System · gpt-oss:120b-cloud · LangGraph + CrewAI</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Hidden file input -->
+<input type="file" id="file-input" multiple accept=".csv,.xlsx,.xls,.pdf,.docx,.pptx,.ppt"
+  onchange="handleFiles(this.files)">
+
+<script>
+// Configure marked
+marked.setOptions({
+  breaks: true,
+  gfm: true,
+});
+
+// ── State ──
+let _taskId     = null;
+let _evtSource  = null;
+let _pollTimer  = null;
+let _uploadedFiles = []; // [{file_id, filename, type}]
+let _running    = false;
+let _conversationHistory = []; // [{role, content}] — last 3 exchanges
+let _lastQuestion = '';
+
+// References to the CURRENT active AI message's DOM nodes
+let _currentAI = {
+  thinkingBody: null,
+  thinkSpinner: null,
+  thinkLabel:   null,
+  thinkChevron: null,
+  thinkHeader:  null,
+  answerWrap:   null,
+  thinkOpen:    true,
+};
+
+// ── Suggestions ──
+function useSuggestion(btn) {
+  document.getElementById('q').value = btn.textContent;
+  autoResize(document.getElementById('q'));
+}
+
+// ── File handling ──
+function handleFiles(files) {
+  if (!files.length) return;
+  const fd = new FormData();
+  for (const f of files) fd.append('files', f);
+
+  fetch('/api/upload', { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(data => {
+      data.files.forEach(f => {
+        _uploadedFiles.push(f);
+        addFileChip(f);
+      });
+    })
+    .catch(e => alert('Upload failed: ' + e));
+
+  document.getElementById('file-input').value = '';
+}
+
+function addFileChip(f) {
+  const wrap = document.getElementById('file-chips');
+  const icon = f.type === 'structured' ? '📊' : '📄';
+  const chip = document.createElement('div');
+  chip.className = 'file-chip';
+  chip.dataset.fid = f.file_id;
+  chip.innerHTML = `<span class="file-chip-icon">${icon}</span><span>${f.filename}</span>
+    <button class="file-chip-remove" onclick="removeFile('${f.file_id}')">×</button>`;
+  wrap.appendChild(chip);
+}
+
+function removeFile(fid) {
+  _uploadedFiles = _uploadedFiles.filter(f => f.file_id !== fid);
+  document.querySelector(`[data-fid="${fid}"]`)?.remove();
+}
+
+// ── DB toggle ──
+function toggleDb() {
+  const row = document.getElementById('db-row');
+  const btn = document.getElementById('db-toggle');
+  const show = row.classList.toggle('show');
+  btn.classList.toggle('active', show);
+}
+
+// ── Input helpers ──
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+}
+
+// ── New chat ──
+function newChat() {
+  _taskId = null;
+  if (_evtSource) { _evtSource.close(); _evtSource = null; }
+  if (_pollTimer)  { clearInterval(_pollTimer); _pollTimer = null; }
+  _uploadedFiles = [];
+  _conversationHistory = [];
+  _lastQuestion = '';
+  _running = false;
+  document.getElementById('file-chips').innerHTML = '';
+  document.getElementById('chat-inner').innerHTML = `
+    <div class="chat-empty" id="chat-empty">
+      <div class="chat-empty-icon">🧠</div>
+      <h2>What can I help you solve?</h2>
+      <p>I will automatically build a team of AI agents tailored to your problem.</p>
+      <div class="suggestion-grid">
+        <button class="suggestion" onclick="useSuggestion(this)">Why is our customer churn increasing?</button>
+        <button class="suggestion" onclick="useSuggestion(this)">Analyse sales performance and find key drivers</button>
+        <button class="suggestion" onclick="useSuggestion(this)">Help me launch a retention marketing campaign</button>
+        <button class="suggestion" onclick="useSuggestion(this)">Identify fraud patterns in transaction data</button>
+      </div>
+    </div>`;
+  document.getElementById('q').value = '';
+  document.getElementById('btn-send').disabled = false;
+  document.querySelectorAll('.hist-item').forEach(h => h.classList.remove('active'));
+}
+
+// ── Send ──
+async function send() {
+  if (_running) return;
+  const q    = document.getElementById('q').value.trim();
+  const dbUri = document.getElementById('db-uri').value.trim();
+  if (!q) return;
+
+  _lastQuestion = q;
+  document.getElementById('q').value = '';
+  autoResize(document.getElementById('q'));
+  document.getElementById('btn-send').disabled = true;
+  _running = true;
+
+  // Remove empty state
+  document.getElementById('chat-empty')?.remove();
+
+  // Append user bubble
+  appendUserMessage(q, [..._uploadedFiles]);
+
+  // Append AI thinking placeholder
+  const aiEl = appendAIMessage();
+
+  try {
+    const res = await fetch('/api/solve', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        question: q,
+        db_uri: dbUri,
+        uploaded_file_ids: _uploadedFiles.map(f => f.file_id),
+        conversation_history: _conversationHistory.slice(-6),
+      }),
+    });
+    const data = await res.json();
+    _taskId = data.task_id;
+
+    // Add to sidebar
+    addHistItem(_taskId, q);
+
+    openStream(_taskId, aiEl);
+    _pollTimer = setInterval(() => pollFinal(_taskId, aiEl), 4000);
+
+  } catch(e) {
+    aiEl.querySelector('.answer-wrap').innerHTML = `<p style="color:var(--red)">Failed to start: ${e}</p>`;
+    _running = false;
+    document.getElementById('btn-send').disabled = false;
+  }
+
+  // Clear file chips after send
+  _uploadedFiles = [];
+  document.getElementById('file-chips').innerHTML = '';
+}
+
+// ── Message builders ──
+function appendUserMessage(text, files) {
+  const wrap = document.getElementById('chat-inner');
+  const div  = document.createElement('div');
+  div.className = 'msg msg-user';
+
+  let filesHtml = '';
+  if (files.length) {
+    const chips = files.map(f => {
+      const icon = f.type === 'structured' ? '📊' : '📄';
+      return `<span class="file-chip-user">${icon} ${f.filename}</span>`;
+    }).join('');
+    filesHtml = `<div class="msg-files-user">${chips}</div>`;
+  }
+
+  div.innerHTML = `${filesHtml}<div class="msg-bubble-user">${escHtml(text)}</div>`;
+  wrap.appendChild(div);
+  scrollBottom();
+  return div;
+}
+
+function appendAIMessage() {
+  const wrap = document.getElementById('chat-inner');
+  const div  = document.createElement('div');
+  div.className = 'msg msg-ai';
+  div.innerHTML = `
+    <div class="ai-row">
+      <div class="ai-avatar">🤖</div>
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:.6rem">
+        <div class="thinking-wrap">
+          <div class="thinking-header open" onclick="toggleThinking(this)">
+            <div class="thinking-spinner"></div>
+            <span class="think-label" style="font-weight:600">Thinking…</span>
+            <span class="thinking-chevron open">▼</span>
+          </div>
+          <div class="thinking-body"></div>
+        </div>
+        <div class="answer-wrap" style="display:none">
+          <div class="typing-dots"><span></span><span></span><span></span></div>
+        </div>
+      </div>
+    </div>`;
+  wrap.appendChild(div);
+
+  // Point _currentAI at this new message's elements
+  const tw = div.querySelector('.thinking-wrap');
+  _currentAI.thinkHeader  = tw.querySelector('.thinking-header');
+  _currentAI.thinkSpinner = tw.querySelector('.thinking-spinner');
+  _currentAI.thinkLabel   = tw.querySelector('.think-label');
+  _currentAI.thinkChevron = tw.querySelector('.thinking-chevron');
+  _currentAI.thinkingBody = tw.querySelector('.thinking-body');
+  _currentAI.answerWrap   = div.querySelector('.answer-wrap');
+  _currentAI.thinkOpen    = true;
+
+  scrollBottom();
+  return div;
+}
+
+// Works for both the current and any previous message (toggling is per-element)
+function toggleThinking(headerEl) {
+  const tw     = headerEl.closest('.thinking-wrap');
+  const body   = tw.querySelector('.thinking-body');
+  const chev   = tw.querySelector('.thinking-chevron');
+  const isOpen = !body.classList.contains('hidden');
+  body.classList.toggle('hidden', isOpen);
+  chev.classList.toggle('open', !isOpen);
+  headerEl.classList.toggle('open', !isOpen);
+  // Keep _currentAI.thinkOpen in sync for the active message
+  if (_currentAI.thinkingBody === body) _currentAI.thinkOpen = !isOpen;
+}
+
+// ── SSE stream ──
+function openStream(taskId, aiEl) {
+  if (_evtSource) { _evtSource.close(); }
+  _evtSource = new EventSource(`/api/stream/${taskId}`);
+  _evtSource.onmessage = (e) => {
+    try {
+      const msg = JSON.parse(e.data);
+      if (msg.type === 'stream_end') { _evtSource.close(); return; }
+      handleEvent(msg, aiEl);
+    } catch {}
+  };
+  _evtSource.onerror = () => { _evtSource.close(); };
+}
+
+function handleEvent(msg, aiEl) {
+  const { type, message, payload } = msg;
+
+  if (type === 'plan') {
+    addThinkLine('info', '📋', message);
+    if (payload.plan) renderPlanLines(payload.plan);
+  } else if (type === 'step_start') {
+    addThinkLine('step_start', '▶', message);
+  } else if (type === 'step_output') {
+    addThinkLine('info', '✓', message);
+  } else if (type === 'eval') {
+    const score = payload.score || 0;
+    const cls = score >= 7 ? 'pass' : 'warn';
+    addThinkLine('eval ' + cls, score >= 7 ? '✅' : '⚠️', message, score ? `${score}/10` : null, cls);
+  } else if (type === 'retry') {
+    addThinkLine('retry', '↩', message);
+  } else if (type === 'synthesis_start') {
+    addThinkLine('synthesis_start', '🧠', message);
+  } else if (type === 'info') {
+    addThinkLine('info', 'ℹ', message);
+  } else if (type === 'error') {
+    addThinkLine('error', '❌', message);
+    finishThinking(false);
+    if (_currentAI.answerWrap) {
+      _currentAI.answerWrap.style.display = '';
+      _currentAI.answerWrap.innerHTML = `<p style="color:var(--red)">${escHtml(message)}</p>`;
+    }
+    endRun();
+  } else if (type === 'done') {
+    finishThinking(true);
+    if (payload.final_answer) {
+      renderFinalAnswer(payload.final_answer);
+    }
+    endRun();
+    if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
+    updateHistStatus(_taskId, 'completed');
+  }
+
+  scrollBottom();
+}
+
+function addThinkLine(cls, icon, text, scoreText, scoreCls) {
+  const body = _currentAI.thinkingBody;
+  if (!body) return;
+  const div = document.createElement('div');
+  div.className = `step-line ${cls}`;
+  let scoreHtml = '';
+  if (scoreText) scoreHtml = `<span class="step-score ${scoreCls || ''}">${scoreText}</span>`;
+  div.innerHTML = `<span class="step-icon">${icon}</span><span style="flex:1">${escHtml(text)}</span>${scoreHtml}`;
+  body.appendChild(div);
+  scrollBottom();
+}
+
+function renderPlanLines(plan) {
+  (plan.steps || []).forEach((s, i) => {
+    addThinkLine('info', `${i+1}.`, `${s.name} — ${s.objective} [${(s.tools||[]).join(', ')}]`);
+  });
+}
+
+function finishThinking(success) {
+  if (_currentAI.thinkSpinner) _currentAI.thinkSpinner.className = 'thinking-spinner done';
+  if (_currentAI.thinkLabel)   _currentAI.thinkLabel.textContent = success ? 'Done thinking' : 'Stopped';
+
+  // Auto-collapse thinking after done
+  setTimeout(() => {
+    if (_currentAI.thinkOpen && _currentAI.thinkHeader) toggleThinking(_currentAI.thinkHeader);
+  }, 800);
+}
+
+function fixImagePaths(md) {
+  // 1. Rewrite Windows absolute paths (e.g. D:\...\outputs\charts\file.png)
+  md = md.replace(/[A-Za-z]:[\\\/][^\s)"']+\.(png|jpg|jpeg|gif|svg|webp)/gi, (match) => {
+    const normalized = match.replace(/\\/g, '/');
+    const idx = normalized.toLowerCase().indexOf('/outputs/');
+    if (idx !== -1) return '/ua-outputs' + normalized.slice(idx + '/outputs'.length);
+    return '/ua-outputs/charts/' + normalized.split('/').pop();
+  });
+  // 2. Rewrite any image markdown whose path is NOT already /ua-outputs or http
+  //    — covers /generated_charts/, /tmp/, ./charts/, relative paths, etc.
+  md = md.replace(/!\[([^\]]*)\]\(([^)]+\.(?:png|jpg|jpeg|gif|svg|webp))\)/gi, (match, alt, path) => {
+    if (/^https?:\/\//.test(path)) return match;           // external URL — keep
+    if (path.startsWith('/ua-outputs/')) return match;     // already correct — keep
+    if (path.startsWith('/outputs/charts/'))               // UA relative URL
+      return `![${alt}](/ua-outputs/charts/${path.split('/').pop()})`;
+    // Everything else: extract just the filename and look in /ua-outputs/charts/
+    const filename = path.replace(/\\/g, '/').split('/').pop();
+    return `![${alt}](/ua-outputs/charts/${filename})`;
+  });
+  return md;
+}
+
+function renderFinalAnswer(md) {
+  const wrap = _currentAI.answerWrap;
+  if (!wrap) return;
+  wrap.style.display = '';
+  wrap.innerHTML = marked.parse(fixImagePaths(md));
+  // Save to conversation memory (last 3 exchanges = 6 messages)
+  if (_lastQuestion) {
+    _conversationHistory.push(
+      { role: 'user',      content: _lastQuestion },
+      { role: 'assistant', content: md }
+    );
+    if (_conversationHistory.length > 6) {
+      _conversationHistory = _conversationHistory.slice(-6);
+    }
+  }
+}
+
+async function pollFinal(taskId, aiEl) {
+  try {
+    const res  = await fetch(`/api/status/${taskId}`);
+    const data = await res.json();
+    if (data.final_answer && data.status === 'completed') {
+      const wrap = _currentAI.answerWrap;
+      if (wrap && (!wrap.children.length || wrap.querySelector('.typing-dots'))) {
+        renderFinalAnswer(data.final_answer);
+        finishThinking(true);
+        endRun();
+        clearInterval(_pollTimer);
+        _pollTimer = null;
+        updateHistStatus(taskId, 'completed');
+      }
+    }
+  } catch {}
+}
+
+function endRun() {
+  _running = false;
+  document.getElementById('btn-send').disabled = false;
+}
+
+// ── Sidebar history ──
+function addHistItem(taskId, question) {
+  const list = document.getElementById('hist-list');
+  const item = document.createElement('div');
+  item.className = 'hist-item active';
+  item.id = `hist-${taskId}`;
+  item.dataset.tid = taskId;
+  item.innerHTML = `<span class="hist-dot running" id="hdot-${taskId}"></span>${escHtml(question.slice(0,42))}`;
+  item.onclick = () => loadTask(taskId);
+  // Insert after label
+  const label = list.querySelector('.hist-label');
+  label ? label.after(item) : list.prepend(item);
+  document.querySelectorAll('.hist-item').forEach(h => h.classList.remove('active'));
+  item.classList.add('active');
+}
+
+function updateHistStatus(taskId, status) {
+  const dot = document.getElementById(`hdot-${taskId}`);
+  if (dot) { dot.className = `hist-dot ${status}`; }
+}
+
+async function loadTask(taskId) {
+  // Just highlight for now — full reload support could be added later
+  document.querySelectorAll('.hist-item').forEach(h => h.classList.remove('active'));
+  document.getElementById(`hist-${taskId}`)?.classList.add('active');
+}
+
+// ── Utils ──
+function scrollBottom() {
+  const area = document.getElementById('chat-area');
+  area.scrollTop = area.scrollHeight;
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Load recent tasks on startup
+(async () => {
+  try {
+    const res  = await fetch('/api/tasks');
+    const list = await res.json();
+    list.slice(0,10).reverse().forEach(t => addHistItem(t.task_id, t.question));
+    // Clear active since none selected
+    document.querySelectorAll('.hist-item').forEach(h => h.classList.remove('active'));
+    list.forEach(t => updateHistStatus(t.task_id, t.status));
+  } catch {}
+})();
+</script>
+</body>
+</html>
