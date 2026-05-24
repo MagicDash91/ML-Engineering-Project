@@ -1,0 +1,58 @@
+version: 2
+
+sources:
+  - name: raw_data
+    description: "Raw customer churn data from Snowflake"
+    database: "{{ var('raw_database') }}"
+    schema: "{{ var('raw_schema') }}"
+    tables:
+      - name: churn
+        description: "Raw telco customer churn dataset"
+        columns:
+          - name: customerid
+            description: "Unique customer identifier"
+            tests:
+              - unique
+              - not_null
+          - name: gender
+            description: "Customer gender"
+          - name: seniorcitizen
+            description: "Whether customer is a senior citizen (1/0)"
+          - name: partner
+            description: "Whether customer has a partner"
+          - name: dependents
+            description: "Whether customer has dependents"
+          - name: tenure
+            description: "Number of months the customer has stayed with the company"
+          - name: phoneservice
+            description: "Whether customer has phone service"
+          - name: multiplelines
+            description: "Whether customer has multiple phone lines"
+          - name: internetservice
+            description: "Type of internet service"
+          - name: onlinesecurity
+            description: "Whether customer has online security"
+          - name: onlinebackup
+            description: "Whether customer has online backup"
+          - name: deviceprotection
+            description: "Whether customer has device protection"
+          - name: techsupport
+            description: "Whether customer has tech support"
+          - name: streamingtv
+            description: "Whether customer has streaming TV"
+          - name: streamingmovies
+            description: "Whether customer has streaming movies"
+          - name: contract
+            description: "Contract term"
+          - name: paperlessbilling
+            description: "Whether customer has paperless billing"
+          - name: paymentmethod
+            description: "Payment method"
+          - name: monthlycharges
+            description: "Monthly charges amount"
+          - name: totalcharges
+            description: "Total charges amount"
+          - name: churn
+            description: "Whether customer churned (target variable)"
+            tests:
+              - not_null

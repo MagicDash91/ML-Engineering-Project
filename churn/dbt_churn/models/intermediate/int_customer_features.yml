@@ -1,0 +1,35 @@
+version: 2
+
+models:
+  - name: int_customer_features
+    description: "Customer data with engineered features"
+    tests:
+      - dbt_utils.equal_rowcount:
+          compare_model: ref('stg_customer_churn')
+    columns:
+      - name: customer_id
+        tests:
+          - unique
+          - not_null
+      - name: family_status
+        tests:
+          - accepted_values:
+              values: ['family_with_dependents', 'couple_no_dependents', 'single_with_dependents', 'single_no_dependents']
+      - name: tenure_segment
+        tests:
+          - accepted_values:
+              values: ['new_customer', 'established_customer', 'loyal_customer', 'long_term_customer']
+      - name: internet_add_ons_count
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 6
+      - name: spending_segment
+        tests:
+          - accepted_values:
+              values: ['low_spender', 'medium_spender', 'high_spender']
+      - name: customer_value_score
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 4
+              max_value: 8

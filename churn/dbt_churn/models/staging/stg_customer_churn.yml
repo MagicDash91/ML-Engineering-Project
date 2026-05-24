@@ -1,0 +1,38 @@
+version: 2
+
+models:
+  - name: stg_customer_churn
+    description: "Cleaned and standardized customer churn data from raw source"
+    columns:
+      - name: customer_id
+        description: "Unique customer identifier"
+        tests:
+          - unique
+          - not_null
+      - name: gender
+        description: "Customer gender"
+        tests:
+          - accepted_values:
+              values: ['Male', 'Female']
+      - name: is_senior_citizen
+        description: "Whether customer is a senior citizen"
+        tests:
+          - not_null
+      - name: tenure_months
+        description: "Number of months customer has been with company"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 100
+      - name: monthly_charges
+        description: "Monthly charges amount"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 200
+      - name: has_churned
+        description: "Whether customer has churned (target variable)"
+        tests:
+          - not_null

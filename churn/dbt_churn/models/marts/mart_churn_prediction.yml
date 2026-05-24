@@ -1,0 +1,55 @@
+version: 2
+
+models:
+  - name: mart_churn_prediction
+    description: "ML-ready dataset with encoded features for churn prediction"
+    tests:
+      - dbt_utils.equal_rowcount:
+          compare_model: ref('int_customer_features')
+    columns:
+      - name: customer_id
+        description: "Unique customer identifier"
+        tests:
+          - unique
+          - not_null
+      
+      # Encoded features should be 0 or 1
+      - name: gender_male
+        tests:
+          - accepted_values:
+              values: [0, 1]
+      - name: gender_female
+        tests:
+          - accepted_values:
+              values: [0, 1]
+      - name: is_senior_citizen
+        tests:
+          - accepted_values:
+              values: [0, 1]
+      
+      # Financial features
+      - name: monthly_charges
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: total_charges
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      
+      # Target variable
+      - name: target_churned
+        description: "Target variable for ML model (0/1)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+      
+      # Data quality indicators
+      - name: feature_completeness_score
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 1

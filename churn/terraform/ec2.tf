@@ -1,0 +1,1 @@
+# EC2 resources removed - S3 only configuration
