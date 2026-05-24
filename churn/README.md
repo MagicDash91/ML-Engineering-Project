@@ -12,6 +12,12 @@ A comprehensive machine learning pipeline for predicting customer churn in telec
 - ✅ ML Model Training & Prediction
 - ✅ Automatic S3 Upload Integration
 
+## Project Architecture :
+
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/churn/static/architecture.png)
+
+---
+
 ## Project Screenshots :
 
 ![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/churn/static/a1.JPG)
@@ -21,6 +27,8 @@ A comprehensive machine learning pipeline for predicting customer churn in telec
 ![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/churn/static/a3.JPG)
 
 ![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/churn/static/a4.JPG)
+
+---
 
 ## 🏗️ Project Structure
 
