@@ -14,13 +14,13 @@ A comprehensive machine learning pipeline for predicting customer churn in telec
 
 ## Project Screenshots :
 
-![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/churn/static/a1.jpg)
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/churn/static/a1.JPG)
 
-![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/churn/static/a2.jpg)
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/churn/static/a2.JPG)
 
-![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/churn/static/a3.jpg)
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/churn/static/a3.JPG)
 
-![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/churn/static/a4.jpg)
+![Application Logo](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/churn/static/a4.JPG)
 
 ## 🏗️ Project Structure
 
