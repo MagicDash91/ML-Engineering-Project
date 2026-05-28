@@ -1,0 +1,109 @@
+groups:
+  - name: churn_pipeline_alerts
+    rules:
+      # Data Pipeline Health Alerts
+      - alert: ChurnPipelineFailure
+        expr: airflow_dag_run_failed_total{dag_id="telco_churn_unified_pipeline"} > 0
+        for: 1m
+        labels:
+          severity: critical
+          team: data-engineering
+        annotations:
+          summary: "Churn prediction pipeline failed"
+          description: "The telco churn prediction pipeline has failed. Check Airflow logs for details."
+
+      - alert: ChurnPipelineSlowExecution
+        expr: airflow_dag_run_duration_seconds{dag_id="telco_churn_unified_pipeline"} > 3600
+        for: 5m
+        labels:
+          severity: warning
+          team: data-engineering
+        annotations:
+          summary: "Churn pipeline running slowly"
+          description: "The churn pipeline is taking longer than 1 hour to complete."
+
+      # Model Performance Alerts  
+      - alert: ChurnModelAccuracyDrop
+        expr: churn_model_accuracy < 0.75
+        for: 2m
+        labels:
+          severity: warning
+          team: ml-engineering
+        annotations:
+          summary: "Churn model accuracy dropped below threshold"
+          description: "Model accuracy is {{ $value }}, below the 75% threshold."
+
+      - alert: ChurnPredictionVolumeAnomaly
+        expr: increase(churn_predictions_generated_total[1h]) < 100 or increase(churn_predictions_generated_total[1h]) > 10000
+        for: 10m
+        labels:
+          severity: warning
+          team: data-engineering
+        annotations:
+          summary: "Unusual churn prediction volume"
+          description: "Generated {{ $value }} predictions in the last hour, which is outside normal range."
+
+      # Data Quality Alerts
+      - alert: DataQualityIssue
+        expr: churn_data_quality_score < 0.8
+        for: 5m
+        labels:
+          severity: warning
+          team: data-engineering
+        annotations:
+          summary: "Data quality issues detected"
+          description: "Data quality score is {{ $value }}, below the 80% threshold."
+
+      # Infrastructure Alerts
+      - alert: KafkaConsumerLag
+        expr: kafka_consumer_lag_sum > 1000
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High Kafka consumer lag"
+          description: "Kafka consumer lag is {{ $value }} messages."
+
+      - alert: S3UploadFailure
+        expr: increase(s3_upload_errors_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "S3 upload failures detected"
+          description: "{{ $value }} S3 upload failures in the last 5 minutes."
+
+  - name: system_alerts
+    rules:
+      # System Resource Alerts
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is above 85%: {{ $value }}"
+
+      - alert: HighCPUUsage
+        expr: 100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 10m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is above 80%: {{ $value }}"
+
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes{fstype!="tmpfs"} / node_filesystem_size_bytes{fstype!="tmpfs"}) * 100 < 15
+        for: 5m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Low disk space"
+          description: "Disk space is below 15%: {{ $value }}"
