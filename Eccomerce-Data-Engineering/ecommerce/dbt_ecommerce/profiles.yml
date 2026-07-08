@@ -1,0 +1,14 @@
+dbt_ecommerce:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT', 'JNJUCIN-BE85650') }}"
+      user: "{{ env_var('SNOWFLAKE_USER', 'MAGICDASH') }}"
+      password: "{{ env_var('SNOWFLAKE_PASSWORD') }}"
+      role: "{{ env_var('SNOWFLAKE_ROLE', 'ACCOUNTADMIN') }}"
+      database: "{{ env_var('SNOWFLAKE_DATABASE', 'E_COMMERCE') }}"
+      warehouse: "{{ env_var('SNOWFLAKE_WAREHOUSE', 'COMPUTE_WH') }}"
+      schema: PUBLIC
+      threads: 4
+      keepalives_idle: 600

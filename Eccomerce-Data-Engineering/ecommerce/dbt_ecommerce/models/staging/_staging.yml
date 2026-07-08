@@ -1,0 +1,112 @@
+version: 2
+
+models:
+  - name: stg_customers
+    description: "Cleaned customers, one row per customer_id."
+    columns:
+      - name: customer_id
+        tests: [not_null, unique]
+      - name: customer_unique_id
+        tests: [not_null]
+
+  - name: stg_geolocation
+    description: "Geolocation deduplicated to one representative point per zip code prefix."
+    columns:
+      - name: zip_code_prefix
+        tests: [not_null, unique]
+
+  - name: stg_orders
+    description: "Order headers with derived delivery metrics."
+    columns:
+      - name: order_id
+        tests: [not_null, unique]
+      - name: customer_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_customers')
+              field: customer_id
+      - name: order_status
+        tests:
+          - accepted_values:
+              values: ['delivered', 'invoiced', 'shipped', 'canceled',
+                       'approved', 'processing', 'created', 'unavailable']
+
+  - name: stg_order_items
+    description: "One row per order item, with surrogate key."
+    columns:
+      - name: order_item_sk
+        tests: [not_null, unique]
+      - name: order_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_orders')
+              field: order_id
+      - name: price
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+  - name: stg_order_payments
+    description: "One row per payment record, with surrogate key."
+    columns:
+      - name: payment_sk
+        tests: [not_null, unique]
+      - name: order_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_orders')
+              field: order_id
+      - name: payment_type
+        tests:
+          - accepted_values:
+              values: ['credit_card', 'boleto', 'voucher', 'debit_card', 'not_defined']
+
+  - name: stg_order_reviews
+    description: "Reviews deduplicated to one row per review_id."
+    columns:
+      - name: review_id
+        tests: [not_null, unique]
+      - name: order_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_orders')
+              field: order_id
+      - name: review_score
+        tests:
+          - not_null
+          - accepted_values:
+              values: [1, 2, 3, 4, 5]
+
+  - name: stg_products
+    description: "Product catalogue with the source column-name typo fixed."
+    columns:
+      - name: product_id
+        tests: [not_null, unique]
+      # product_category_name is nullable in the source (610 products) and a
+      # couple of categories are absent from the mapping table, so the FK to the
+      # category mapping is a warning rather than a hard failure.
+      - name: product_category_name
+        tests:
+          - relationships:
+              to: ref('stg_product_category')
+              field: product_category_name
+              config:
+                severity: warn
+
+  - name: stg_product_category
+    description: "Portuguese -> English category mapping, header row remediated."
+    columns:
+      - name: product_category_name
+        tests: [not_null, unique]
+      - name: product_category_name_english
+        tests: [not_null]
+
+  - name: stg_sellers
+    description: "Marketplace sellers."
+    columns:
+      - name: seller_id
+        tests: [not_null, unique]

@@ -1,0 +1,121 @@
+version: 2
+
+models:
+  # ---------------------------------------------------------------- dimensions
+  - name: dim_customers
+    description: "Customer dimension, one row per customer_id."
+    columns:
+      - name: customer_id
+        tests: [not_null, unique]
+      - name: customer_unique_id
+        tests: [not_null]
+
+  - name: dim_products
+    description: "Product dimension joined to the corrected category mapping."
+    columns:
+      - name: product_id
+        tests: [not_null, unique]
+      - name: product_category_name_english
+        tests: [not_null]
+
+  - name: dim_sellers
+    description: "Seller dimension, one row per seller_id."
+    columns:
+      - name: seller_id
+        tests: [not_null, unique]
+
+  - name: dim_geolocation
+    description: "Geolocation dimension, one row per zip code prefix."
+    columns:
+      - name: zip_code_prefix
+        tests: [not_null, unique]
+
+  - name: dim_date
+    description: "Calendar date dimension, one row per day."
+    columns:
+      - name: date_key
+        tests: [not_null, unique]
+      - name: date_day
+        tests: [not_null, unique]
+
+  # --------------------------------------------------------------------- facts
+  - name: fct_order_items
+    description: "Central fact: one row per order item."
+    columns:
+      - name: order_item_sk
+        tests: [not_null, unique]
+      - name: customer_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_customers')
+              field: customer_id
+      - name: product_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_products')
+              field: product_id
+      - name: seller_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_sellers')
+              field: seller_id
+      - name: order_date_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+      - name: price
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+  - name: fct_payments
+    description: "Payments fact: one row per payment record per order."
+    columns:
+      - name: payment_sk
+        tests: [not_null, unique]
+      - name: customer_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_customers')
+              field: customer_id
+      - name: order_date_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+      - name: payment_value
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+  - name: fct_reviews
+    description: "Reviews fact: one row per review."
+    columns:
+      - name: review_id
+        tests: [not_null, unique]
+      - name: customer_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_customers')
+              field: customer_id
+      - name: review_date_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+      - name: review_score
+        tests:
+          - not_null
+          - accepted_values:
+              values: [1, 2, 3, 4, 5]

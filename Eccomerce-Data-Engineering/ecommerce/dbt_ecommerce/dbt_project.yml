@@ -1,0 +1,39 @@
+name: 'dbt_ecommerce'
+version: '1.0.0'
+config-version: 2
+
+# This setting configures which "profile" dbt uses for this project.
+profile: 'dbt_ecommerce'
+
+# These configurations specify where dbt should look for different types of files.
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# Model layer configuration for the Olist star schema.
+models:
+  dbt_ecommerce:
+    # Staging: light, 1:1-per-source cleaning models, materialized as views.
+    staging:
+      +materialized: view
+      +schema: staging
+    # Marts: the star schema (facts + dimensions), materialized as tables.
+    marts:
+      +materialized: table
+      +schema: marts
+
+vars:
+  # Raw Olist data lives in E_COMMERCE.PUBLIC.
+  raw_database: E_COMMERCE
+  raw_schema: PUBLIC
+  # dim_date spine bounds (covers the full Olist order history 2016-09 .. 2018-10
+  # with generous padding on both ends).
+  date_spine_start: '2016-01-01'
+  date_spine_end: '2019-12-31'

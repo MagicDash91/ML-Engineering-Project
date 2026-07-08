@@ -1,0 +1,64 @@
+# -------------------------------------------------------------------------- #
+# OPTIONAL: Snowflake role/warehouse provisioning (PRD FR6).
+#
+# Rename this file to `snowflake.tf` and `terraform init` again to enable it.
+# It creates the least-privilege DBT_PIPELINE_ROLE scoped to E_COMMERCE and sets
+# COMPUTE_WH auto-suspend, replacing day-to-day use of ACCOUNTADMIN.
+#
+# Requires provider creds via env vars:
+#   SNOWFLAKE_ACCOUNT, SNOWFLAKE_USER, SNOWFLAKE_PASSWORD, SNOWFLAKE_ROLE=ACCOUNTADMIN
+# -------------------------------------------------------------------------- #
+#
+# terraform {
+#   required_providers {
+#     snowflake = {
+#       source  = "Snowflake-Labs/snowflake"
+#       version = "~> 0.94"
+#     }
+#   }
+# }
+#
+# provider "snowflake" {
+#   role = "ACCOUNTADMIN"
+# }
+#
+# resource "snowflake_role" "dbt_pipeline" {
+#   name    = "DBT_PIPELINE_ROLE"
+#   comment = "Least-privilege role for the dbt/Airflow pipeline, scoped to E_COMMERCE."
+# }
+#
+# resource "snowflake_grant_privileges_to_account_role" "usage_db" {
+#   account_role_name = snowflake_role.dbt_pipeline.name
+#   privileges        = ["USAGE"]
+#   on_account_object {
+#     object_type = "DATABASE"
+#     object_name = "E_COMMERCE"
+#   }
+# }
+#
+# resource "snowflake_grant_privileges_to_account_role" "usage_wh" {
+#   account_role_name = snowflake_role.dbt_pipeline.name
+#   privileges        = ["USAGE", "OPERATE"]
+#   on_account_object {
+#     object_type = "WAREHOUSE"
+#     object_name = "COMPUTE_WH"
+#   }
+# }
+#
+# # Grant schema-level privileges so dbt can build staging/marts schemas.
+# resource "snowflake_grant_privileges_to_account_role" "schema_all" {
+#   account_role_name = snowflake_role.dbt_pipeline.name
+#   privileges        = ["USAGE", "CREATE SCHEMA"]
+#   on_account_object {
+#     object_type = "DATABASE"
+#     object_name = "E_COMMERCE"
+#   }
+# }
+#
+# # Auto-suspend the warehouse to avoid idle billing (PRD cost control).
+# resource "snowflake_warehouse" "compute_wh" {
+#   name                = "COMPUTE_WH"
+#   auto_suspend        = 60
+#   auto_resume         = true
+#   initially_suspended = true
+# }

@@ -1,0 +1,12 @@
+# Snowflake + data
+snowflake-connector-python>=3.12.0
+pandas>=2.0.0
+
+# dbt + Cosmos (renders the dbt project as native Airflow tasks)
+dbt-core==1.11.11
+dbt-snowflake==1.11.5
+astronomer-cosmos==1.14.2
+
+# AWS (S3 landing) and notifications
+boto3>=1.34.0
+requests>=2.31.0

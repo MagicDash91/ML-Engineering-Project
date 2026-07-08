@@ -1,0 +1,63 @@
+version: 2
+
+sources:
+  - name: raw
+    description: "Raw Olist Brazilian e-commerce tables loaded into E_COMMERCE.PUBLIC."
+    database: "{{ var('raw_database') }}"
+    schema: "{{ var('raw_schema') }}"
+    tables:
+      - name: customers
+        identifier: CUSTOMERS
+        description: "One row per order-scoped customer id (Olist reuses a stable customer_unique_id across orders)."
+        columns:
+          - name: customer_id
+            tests: [not_null, unique]
+          - name: customer_unique_id
+            tests: [not_null]
+
+      - name: geolocation
+        identifier: GEOLOCATION
+        description: "Lat/lng points per Brazilian zip code prefix. Many rows per prefix; deduplicated in staging."
+
+      - name: orders
+        identifier: ORDERS
+        description: "Order header. Core fact grain source."
+        columns:
+          - name: order_id
+            tests: [not_null, unique]
+          - name: customer_id
+            tests: [not_null]
+
+      - name: order_items
+        identifier: ORDER_ITEMS
+        description: "One row per item per order."
+
+      - name: order_payments
+        identifier: ORDER_PAYMENTS
+        description: "One row per payment record; an order can have multiple payment rows."
+
+      - name: order_reviews
+        identifier: ORDER_REVIEWS
+        description: "Customer reviews. review_id is NOT unique in the raw data; deduplicated in staging."
+
+      - name: products
+        identifier: PRODUCTS
+        description: "Product catalogue. Source columns PRODUCT_NAME_LENGHT / PRODUCT_DESCRIPTION_LENGHT preserve a typo present in the raw data; fixed in staging."
+        columns:
+          - name: product_id
+            tests: [not_null, unique]
+
+      - name: product_category
+        identifier: PRODUCT_CATEGORY
+        description: >
+          Portuguese -> English category name mapping. Loaded WITHOUT headers, so
+          columns are named C1/C2 and the first data row is the literal header
+          ('product_category_name', 'product_category_name_english'). Remediated in
+          stg_product_category (header row filtered, columns aliased).
+
+      - name: sellers
+        identifier: SELLERS
+        description: "Marketplace sellers."
+        columns:
+          - name: seller_id
+            tests: [not_null, unique]
