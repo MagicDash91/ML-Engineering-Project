@@ -51,7 +51,7 @@ Airflow, and defines the supporting AWS infrastructure as disposable Terraform.
 
 ## Screenshots
 
-![Screenshot 1](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Eccomerce-Data-Engineering/static/a1.jpg)
+![Screenshot 1](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Eccomerce-Data-Engineering/static/a1.JPG)
 
 ![Screenshot 2](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Eccomerce-Data-Engineering/static/a2.jpg)
 
@@ -63,7 +63,7 @@ Airflow, and defines the supporting AWS infrastructure as disposable Terraform.
 
 ![Screenshot 6](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Eccomerce-Data-Engineering/static/a6.jpg)
 
-![Screenshot 6](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Eccomerce-Data-Engineering/static/a7.jpg)
+![Screenshot 6](https://raw.githubusercontent.com/MagicDash91/ML-Engineering-Project/main/Eccomerce-Data-Engineering/static/a7.JPG)
 
 ## Tech stack
 
